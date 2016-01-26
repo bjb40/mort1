@@ -66,55 +66,10 @@ plot(yrs,unlist(RRDy), ylim=c(min(vals),max(vals)+.075), xlab='', ylab='')
   text(1998.5,max(vals)+.075,labels="ICD 10", pos=4)
 dev.off()
 
-#@@@@@@
-#Regression Analyses
-#@@@@@@
-
-
-#@@@@@@@@@@@@
-#bayesian cross-class robust regression
-#@@@@@@@@@@@@
-
-rungibbs = function(y,x){
-
-  # establish vectors and quantities
-  iter = 1000
-  
-  s2=matrix(1,iter)
-  b= matrix(0,iter,ncol(x))
-  
-  xtxi = solve(t(x)%*%x)
-  pars=coefficients(lm(y~x-1))
-  
-  #simulate sigma from inverse gamma marginal
-  s2 = 1/rgamma(iter,(nrow(x)-ncol(x))/2,.5*t(residuals(lm(y~x-1)))%*%residuals(lm(y~x-1)))
-  
-  #set ppd
-  ppd = matrix(0,nrow=length(y),ncol=iter)
-  rsq = matrix(0,iter)
-  
-  #simulate beta from mvn
-  for (i in 1:iter){
-    b[i,]=pars+t(rnorm(length(pars),mean=0,sd=1))%*%chol(s2[i]*xtxi)
-    
-    #generate posterior predictive
-    for (j in 1:nrow(ppd)){
-      ppd[j,i] = t(x[j,]) %*% b[i,] + rnorm(1,mean=0,sd=sqrt(s2[i]))
-      }
-  
-    rsq[i] = summary(lm(ppd[,i]~x[,2:ncol(x)]))$r.squared
-    
-  }
-
-  return(list(betas=b,ppd=ppd,rsquare=rsq,ydata=y,xdata=x))
-  
-}# end of gibbs algorithm
-
 
 #@@@@@@@@@@@@@@@@@@@@@@@@@@
 #Additional data cleaning for model building
 #@@@@@@@@@@@@@@@@@@@@@@@@@@
-
 
 
 #pool by five year ages
@@ -188,7 +143,7 @@ x1 = cbind(
 
 bnames1=c('Intercept',
           #'Ages',
-          as.character(as[2:length(as)]),
+          paste0('a',(as[2:length(as)])),
           'Years',
           'Female',
           'Complex',
@@ -197,7 +152,6 @@ bnames1=c('Intercept',
           'Oplace',
           'Black'
 )
-
 
 
 x2 = cbind(
@@ -238,6 +192,7 @@ bnames2=c('Intercept',
 )
 
 colnames(x1) = bnames1
+x1=data.frame(x1)
 colnames(x2) = bnames2
 
 #clean up
@@ -246,29 +201,64 @@ rm(key,agedum,pool,raw,black,ltcare,lim,oplace,other,y,yrs,yrsxicd,CRc,RRAc,RRDc
 
 #export to csv for analysis in stata
 #prepare 'panel' identifier based on observed characteristics
-dem = numeric(length=length(yrrac))
-statadat = cbind(yrrac,yrrdc,dem,x1)
+#dem = numeric(length=length(yrrac))
+
 
 #output unique demographic slices
-dems=unique(x1[,colnames(x1) %in% c(as.character(seq(45,85,by=5)),'Black','Female','Female')])
-statasub = statadat[,colnames(statadat) %in% colnames(dems)]
+ages=unique(x1[,colnames(x1) %in% c(paste0('a',seq(45,85,by=5)))])
+agesub = x1[,colnames(x1) %in% colnames(ages)]
+x1$a=as.numeric(NA)
 
-for(i in 1:nrow(dems)){
+for(i in 1:nrow(ages)){
   #test rowise equality
-  equals = apply(statasub,1,FUN = function(x) all(x == dems[i,]))
+  equals = apply(agesub,1,FUN = function(x) all(x == ages[i,]))
   #print(c(i,sum(equals))) #should be 10 equals each for each of the time periods
-  statadat[equals,'dem'] = i
+  x1[equals,'a'] = i
 }
+
+
+
+statadat = cbind(yrrac,yrrdc,x1)
 
 write.csv(statadat,paste0(outdir,'stata-series.csv'))
 
-rm(statadat,statasub, dem, dems)
+rm(statadat)
 
 #@@@@@@@@@@@@@@@@@@@
 #Run and Collect Models
 #@@@@@@@@@@@@@@@@@@@
 
-yrrac1 = rungibbs(yrrac,x1)
+#load rstan
+library('rstan')
+
+rstan_options(auto_write = TRUE)
+options(mc.cores = parallel::detectCores())
+options(mc.cores = 3) #leave one core free for work
+
+#@@@@@@
+#Model 1 yrrac
+#@@@@@@
+
+y=yrrac
+id=x1[,'a']
+t=x1[,'Years']
+z=as.matrix(x1[,!colnames(x1) %in% c('yrrac','yrrdc','Years','a','Intercept','x',c(paste0('a',seq(45,85,by=5))))])
+N=length(y)
+IDS=length(unique(id))
+P = ncol(z)
+td = t+6 #recenter so ids are not 0
+TDS=length(unique(td))
+
+
+yrrac1 = stan("bhm-cc.stan", data=c('y','id','t','z','N','IDS','P','td','TDS'),
+               #algorithm='HMC',
+               chains=3,iter=250,verbose=T);
+
+
+
+
+
+
 yrrac2 = rungibbs(yrrac,x2)
 
 #delete three structural zeros
