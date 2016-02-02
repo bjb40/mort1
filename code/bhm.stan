@@ -45,7 +45,7 @@ model{
   gamma ~ normal(0,5);
   sig ~ normal(0,5);
 
-  zi ~ cauchy(0,10);
+  zi ~ cauchy(0,5);
   
 }
 

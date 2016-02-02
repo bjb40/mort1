@@ -250,13 +250,14 @@ P = ncol(z)
 td = t+6 #recenter so ids are not 0
 TDS=length(unique(td))
 
+#iters = 5000
 iters = 1000
 
 yrrac1 = stan("bhm.stan", data=c('y','id','t','z','N','IDS','P'),
                #algorithm='HMC',
                chains=3,iter=iters,verbose=T);
 
-sink(paste0(outdir,'stan-output-1000-cauchy-wide.txt'))
+sink(paste0(outdir,'stan-output-5000-cauchy.txt'))
 
 elapsed = get_elapsed_time(yrrac1)
 elapsed = max(rowSums(elapsed))/60 #minutes elapsed
