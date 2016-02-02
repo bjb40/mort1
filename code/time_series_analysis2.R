@@ -242,7 +242,7 @@ options(mc.cores = 3) #leave one core free for work
 y=yrrac
 id=x1[,'a']
 t=x1[,'Years']
-z=as.matrix(x1[,!colnames(x1) %in% c('yrrac','yrrdc','Years','a','Intercept','x',c(paste0('a',seq(45,85,by=5))))])
+z=as.matrix(x1[,!colnames(x1) %in% c('yrrac','yrrdc','Years','a','Intercept','x')])
 N=length(y)
 IDS=length(unique(id))
 P = ncol(z)
@@ -254,9 +254,18 @@ yrrac1 = stan("bhm-cc.stan", data=c('y','id','t','z','N','IDS','P','td','TDS'),
                #algorithm='HMC',
                chains=3,iter=250,verbose=T);
 
+t = get_elapsed_time(yrrac1)
+t = max(rowSums(t))/60 #minutes elapsed
 
+sum=summary(yrrac1)
+print(range(sum$summary[,'Rhat']))
 
+print(t)
+print(250/t)
+print(range(sum$summary[,'n_eff']/t))
+print(mean(sum$summary[,'n_eff']/t))
 
+print(round(sum$summary,3))
 
 
 yrrac2 = rungibbs(yrrac,x2)
