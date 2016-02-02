@@ -54,8 +54,9 @@ eststo: xtgls yrrac  a45 a50 a55 a60 a65 a70 a75 a80 a85 years ///
 female complex home ltcare oplace black, panels(hetero) corr(psar1)
 
 eststo: xtgls yrrac a45 a50 a55 a60 a65 a70 a75 a80 a85 ///
- icd10 c.icd10#(a45 a50 a55 a60 a65 a70 a75 a80 a85) ///
- years icd10#c.years female c.icd10#female black c.icd10#black ///
+ icd10 c.icd10#(c.a45 c.a50 c.a55 c.a60 c.a65 c.a70 c.a75 c.a80 c.a85) ///
+ years c.icd10#c.years female c.icd10#c.female black c.icd10#c.black ///
+	 home ltcare oplace ///
 	, panels(hetero) corr(psar1)
  
  *delete structural zeros
@@ -70,8 +71,9 @@ eststo: xtgls yrrdc  a45 a50 a55 a60 a65 a70 a75 a80 a85 years ///
 female complex home ltcare oplace black, panels(hetero) corr(psar1) force
 
 eststo: xtgls yrrdc a45 a50 a55 a60 a65 a70 a75 a80 a85 ///
- icd10 c.icd10#(a45 a50 a55 a60 a65 a70 a75 a80 a85) ///
- years icd10#c.years female c.icd10#female black c.icd10#black ///
+ icd10 c.icd10#(c.a45 c.a50 c.a55 c.a60 c.a65 c.a70 c.a75 c.a80 c.a85) ///
+ years c.icd10#c.years female c.icd10#c.female black c.icd10#c.black ///
+	 home ltcare oplace ///
 	, panels(hetero) corr(psar1) force
 	
 *@@@@@
@@ -79,6 +81,6 @@ eststo: xtgls yrrdc a45 a50 a55 a60 a65 a70 a75 a80 a85 ///
 *@@@@@
 	
 esttab using "H:/projects/mort1/output/flgs-tables.rtf", ///
- scalars(rank ll) replace wide b(3) se(3) t
+ compress scalars(rank ll) replace wide b(3) se(3) t
 
  
