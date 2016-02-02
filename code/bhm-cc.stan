@@ -7,12 +7,10 @@
 
 data { 
   int<lower=0> N; //n observations
-  int<lower=0> IDS; //n age groups
-  int<lower=0> TDS; //n years
+  int<lower=0> IDS; //cell age groups
   int id[N]; // unique age groups (for random effect)
   real y[N]; // outcomes
   int t[N]; //time variable (years)
-  int td[N]; //index number of time variable (random effect)
   int<lower=0> P; //dimensions of predictors
   matrix[N,P] z; // all time invariant
   } 

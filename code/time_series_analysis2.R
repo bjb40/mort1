@@ -241,33 +241,42 @@ options(mc.cores = 3) #leave one core free for work
 #@@@@@@
 
 y=yrrac
-id=x1[,'a']
+id=x1[,'cell']
 t=x1[,'Years']
-z=as.matrix(x1[,!colnames(x1) %in% c('yrrac','yrrdc','Years','a','Intercept','x')])
+z=as.matrix(x1[,!colnames(x1) %in% c('yrrac','yrrdc','Years','cell','Intercept','x')])
 N=length(y)
 IDS=length(unique(id))
 P = ncol(z)
 td = t+6 #recenter so ids are not 0
 TDS=length(unique(td))
 
+iters = 1000
 
-yrrac1 = stan("bhm-cc.stan", data=c('y','id','t','z','N','IDS','P','td','TDS'),
+yrrac1 = stan("bhm.stan", data=c('y','id','t','z','N','IDS','P'),
                #algorithm='HMC',
-               chains=3,iter=250,verbose=T);
+               chains=3,iter=iters,verbose=T);
 
-t = get_elapsed_time(yrrac1)
-t = max(rowSums(t))/60 #minutes elapsed
+sink(paste0(outdir,'stan-output-1000-cauchy-wide.txt'))
 
-sum=summary(yrrac1)
-print(range(sum$summary[,'Rhat']))
+elapsed = get_elapsed_time(yrrac1)
+elapsed = max(rowSums(elapsed))/60 #minutes elapsed
 
-print(t)
-print(250/t)
-print(range(sum$summary[,'n_eff']/t))
-print(mean(sum$summary[,'n_eff']/t))
+sum=summary(yrrac1,pars=c('beta','gamma','zi','sig'))
+ieffects=summary(yrrac1,pars='mu_i')
+cat('Rhat range:\t\t\t',round(range(summary(yrrac1)$summary[,'Rhat']),3))
 
+cat('\nIterations:\t\t\t',iters)
+cat('\nElapsed min:\t\t\t',round(elapsed,3))
+cat('\nIters/minute:\t\t\t',round((iters/elapsed),3))
+cat('\nn_eff (samp):\t\t\t',round(range(summary(yrrac1)$summary[,'n_eff']),3))
+cat('\nn_eff/minutes:\t\t\t',round(range(summary(yrrac1)$summary[,'n_eff'])/elapsed,3))
+
+cat('\n\nParms:\n')
 print(round(sum$summary,3))
 
+sink()
+
+hist(ieffects$summary[,'mean'])
 
 yrrac2 = rungibbs(yrrac,x2)
 
