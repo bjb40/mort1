@@ -33,13 +33,31 @@ gen fyears = years + 6
 eststo: reg yrrac a45 a50 a55 a60 a65 a70 a75 a80 a85 ///
  i.fyears female complex home ltcare oplace black
 
+eststo: reg yrrdc a45 a50 a55 a60 a65 a70 a75 a80 a85 ///
+ i.fyears female complex home ltcare oplace black
+
+esttab using "H:/projects/mort1/output/fixed-years.rtf", ///
+ scalars(rank ll) replace wide b(3) se(3) t
+ 
+eststo clear
+ 
 *fe demean style across cells
 
 xtset cell
 
-xtreg yrrac years, fe
+eststo: xtreg yrrac years, fe
 
-xtreg yrrac years icd10 c.years#c.icd10, fe
+eststo: xtreg yrrac years icd10 c.years#c.icd10, fe
+
+eststo: xtreg yrrdc years, fe
+
+eststo: xtreg yrrdc years icd10 c.years#c.icd10, fe
+
+esttab using "H:/projects/mort1/output/fixed-cells.rtf", ///
+ scalars(rank ll) replace wide b(3) se(3) t
+ 
+eststo clear
+
 
 *@@@@@@
 *cross-classified model 1
@@ -51,22 +69,37 @@ xtreg yrrac years icd10 c.years#c.icd10, fe
 * years female complex home ltcare oplace black ///
 * || _all: R.a || _all: R.years, var reml
 
+*eststo: xtmixed yrrac a45 a50 a55 a60 a65 a70 a75 a80 a85 ///
+* years female complex home ltcare oplace black ///
+* || cell:, var reml
+
+*eststo: xtmixed yrrac a45 a50 a55 a60 a65 a70 a75 a80 a85 ///
+* icd10 c.icd10#(a45 a50 a55 a60 a65 a70 a75 a80 a85) ///
+* years icd10#c.years female c.icd10#female black c.icd10#black ///
+* complex home ltcare oplace || cell:, var reml
+
+*two varance components:
+*year is very small (0.005 with cmall covariance (similar scale))
+
 eststo: xtmixed yrrac a45 a50 a55 a60 a65 a70 a75 a80 a85 ///
  years female complex home ltcare oplace black ///
- || cell:, var reml
+ || cell: years, var cov(un) reml
 
 eststo: xtmixed yrrac a45 a50 a55 a60 a65 a70 a75 a80 a85 ///
- icd10 c.icd10#(a45 a50 a55 a60 a65 a70 a75 a80 a85) ///
- years icd10#c.years female c.icd10#female black c.icd10#black ///
- complex home ltcare oplace || cell:, var reml
+ icd10 c.icd10#(c.a45 c.a50 c.a55 c.a60 c.a65 c.a70 c.a75 c.a80 c.a85) ///
+ years c.icd10#c.years female c.icd10#c.female black c.icd10#c.black ///
+ complex home ltcare oplace || cell: years, var cov(un) reml
 
-*two years
-
-eststo: xtmixed yrrac a45 a50 a55 a60 a65 a70 a75 a80 a85 ///
+eststo: xtmixed yrrdc a45 a50 a55 a60 a65 a70 a75 a80 a85 ///
  years female complex home ltcare oplace black ///
- || cell: years, var reml
+ || cell: years, var cov(un) reml
 
-eststo: xtmixed yrrac a45 a50 a55 a60 a65 a70 a75 a80 a85 ///
- icd10 c.icd10#(a45 a50 a55 a60 a65 a70 a75 a80 a85) ///
- years icd10#c.years female c.icd10#female black c.icd10#black ///
- complex home ltcare oplace || cell: years, var reml
+eststo: xtmixed yrrdc a45 a50 a55 a60 a65 a70 a75 a80 a85 ///
+ icd10 c.icd10#(c.a45 c.a50 c.a55 c.a60 c.a65 c.a70 c.a75 c.a80 c.a85) ///
+ years c.icd10#c.years female c.icd10#c.female black c.icd10#c.black ///
+ complex home ltcare oplace || cell: years, var cov(un) reml
+
+esttab using "H:/projects/mort1/output/hierarchical.rtf", ///
+ scalars(rank ll) replace wide b(3) se(3) t
+ 
+eststo clear
