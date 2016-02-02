@@ -205,15 +205,16 @@ rm(key,agedum,pool,raw,black,ltcare,lim,oplace,other,y,yrs,yrsxicd,CRc,RRAc,RRDc
 
 
 #output unique demographic slices
-ages=unique(x1[,colnames(x1) %in% c(paste0('a',seq(45,85,by=5)))])
-agesub = x1[,colnames(x1) %in% colnames(ages)]
-x1$a=as.numeric(NA)
+cells=unique(x1[,colnames(x1) %in% c(paste0('a',seq(45,85,by=5)),'Female','Black','Complex','Home','Ltcare','Oplace')])
+cellsub = x1[,colnames(x1) %in% colnames(cells)]
+x1$cell=as.numeric(NA)
 
-for(i in 1:nrow(ages)){
+for(i in 1:nrow(cells)){
   #test rowise equality
-  equals = apply(agesub,1,FUN = function(x) all(x == ages[i,]))
+  if(i%%10 == 0){cat('Coding ',i,'of',nrow(cells),'\n')}
+  equals = apply(cellsub,1,FUN = function(x) all(x == cells[i,]))
   #print(c(i,sum(equals))) #should be 10 equals each for each of the time periods
-  x1[equals,'a'] = i
+  x1[equals,'cell'] = i
 }
 
 
