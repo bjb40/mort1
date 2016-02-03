@@ -247,7 +247,9 @@ z=as.matrix(x1[,!colnames(x1) %in% c('yrrac','yrrdc','Years','cell','Intercept',
 N=length(y)
 IDS=length(unique(id))
 P = ncol(z)
-td = t+6 #recenter so ids are not 0
+td = t #initialize
+  td[t<0] = 1 #icd9
+  td[t>=0] = 2 #icd10
 TDS=length(unique(td))
 
 #iters = 5000
@@ -257,7 +259,7 @@ yrrac1 = stan("bhm.stan", data=c('y','id','t','z','N','IDS','P'),
                #algorithm='HMC',
                chains=3,iter=iters,verbose=T);
 
-sink(paste0(outdir,'stan-output-5000-cauchy.txt'))
+sink(paste0(outdir,'stan-output-1000a-cauchy.txt'))
 
 elapsed = get_elapsed_time(yrrac1)
 elapsed = max(rowSums(elapsed))/60 #minutes elapsed
@@ -279,7 +281,10 @@ sink()
 
 hist(ieffects$summary[,'mean'])
 
-yrrac2 = rungibbs(yrrac,x2)
+yrrac2 = stan("bhm-changepoint.stan", data=c('y','id','t','z','N','IDS','P','TDS','td'),
+              #algorithm='HMC',
+              chains=3,iter=iters,verbose=T);
+
 
 #delete three structural zeros
 yrrdc1 = rungibbs(yrrdc[is.finite(yrrdc)],x1[is.finite(yrrdc),])

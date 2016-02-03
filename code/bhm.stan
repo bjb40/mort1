@@ -25,18 +25,19 @@ parameters{
 
 transformed parameters {
     vector[IDS] mu_i; // age-specific conditonal effects
+    vector[N] yhat;
     mu_i <- beta[1] + omega_i*zi;
-
-}
-
-model{
-  real yhat[N];
-  
-  to_vector(omega_i) ~ normal(0,1);
 
   for(n in 1:N){
     yhat[n] <- mu_i[id[n]] + t[n]*beta[2] + z[n]*gamma;
   }
+
+}
+
+model{
+
+  to_vector(omega_i) ~ normal(0,1);
+
   
     y ~ normal(yhat,sig);
   
@@ -51,18 +52,19 @@ model{
 
 // see DIC in stan's google mailing list for discussion, BDA3, pp.172-179
 
-#generated quantities {
+generated quantities {
   //for WAIC
-  #real PoinLikelihoods;
-  #vector[N] PointLikelihoods; // log pointwise predictive density
-  #for(i in 1:N){
-  #  PointLikelioods[i] <- exp(normal_log(yhat[i],mu,sig))
-  #}
+  vector[N] loglik; // log pointwise predictive density
   //for DIC
-  #real dev;
-  #dev <- 0;
-  #for (i in 1:N){
-  #  dev <- dev-(2*normal_log(y[i],yhat[i],sig))
-  #}
-  
-#}
+  real dev;
+  //FOR PPD
+  vector[N] ppd;
+
+  dev <- 0;  
+  for(i in 1:N){
+    loglik[i] <- (normal_log(y[i],yhat[i],sig));
+    dev <- dev-(2*normal_log(y[i],yhat[i],sig));
+    ppd[i] <- normal_rng(yhat[i],sig);
+  }
+
+}
