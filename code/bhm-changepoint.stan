@@ -20,7 +20,7 @@ data {
   
 parameters{
   #individual level
-  matrix[TDS,2] beta; // grand mean coefficients for intercept and slope
+  vector[2] beta; // grand mean coefficients for intercept and slope
   matrix[TDS,P] gamma; //
   real<lower=0> sig;//l1 error; BDA3 388 - uniform gelman 2006; stan manual 66
   real<lower=0> zi1; //(scale for intercept)
@@ -33,11 +33,11 @@ parameters{
 transformed parameters {
     matrix[TDS,IDS] mu_i; // age-specific conditonal effects
     vector[N] yhat;
-    mu_i[1] <- beta[1,1] + omega_i[1]*zi1;
-    mu_i[2] <- beta[2,1] + omega_i[2]*zi2;
+    mu_i[1] <- omega_i[1]*zi1;
+    mu_i[2] <- omega_i[2]*zi2;
 
   for(n in 1:N){
-    yhat[n] <- mu_i[td[n],id[n]] + t[n]*beta[td[n],2] + z[n]*gamma[td[n]]';
+    yhat[n] <- mu_i[td[n],id[n]] + t[n]*beta[td[n]] + z[n]*gamma[td[n]]';
   }
 
 }
@@ -49,8 +49,7 @@ model{
   y ~ normal(yhat,sig);
   
   //prior
-  to_vector(beta[1]) ~ normal(0,5);
-  to_vector(beta[2]) ~ normal(beta[1],5);
+  beta ~ normal(0,5);
   to_vector(gamma[1]) ~ normal(0,5);
   to_vector(gamma[2]) ~ normal(gamma[2],5);
   

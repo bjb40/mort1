@@ -7,6 +7,9 @@ rm(list=ls())
 #Universals
 #@@@@@@
 
+#functions
+source('funs.R')
+
 rawdir = "H:/projects/mort1/dat~/"
 outdir = "H:/projects/mort1/output/"
 imdir = "H:/projects/mort1/img~/"
@@ -130,8 +133,8 @@ for(y in list(yrrac,yrrdc,ycrc)){
 }
 
 x1 = cbind(
-  rep(1,length(y)),
-  agedum[lim,2:ncol(agedum)],
+  #rep(1,length(y)),
+  agedum[lim,1:ncol(agedum)],
   yrs[lim],
   pool$female[lim], 
   pool$complex[lim],
@@ -141,9 +144,9 @@ x1 = cbind(
   black[lim]
 )
 
-bnames1=c('Intercept',
+bnames1=c(#'Intercept',
           #'Ages',
-          paste0('a',(as[2:length(as)])),
+          paste0('a',(as[1:length(as)])),
           'Years',
           'Female',
           'Complex',
@@ -173,27 +176,9 @@ x2 = cbind(
   pool$ICD10[lim]*pool$complex[lim]
 )
 
-bnames2=c('Intercept',
-         #'Ages',
-         as.character(as[2:length(as)]),
-         'ICD10',
-         'Years',
-         'YearsxICD10',
-         'Female',
-         'Complex',
-         'Home',
-         'Ltcare',
-         'Oplace',
-         'Black',
-         'blackxICD10',
-         'femalexICD10',
-         paste(as.character(as[2:length(as)]),'xICD10',sep=''),
-         'complexxICD10'
-)
-
 colnames(x1) = bnames1
 x1=data.frame(x1)
-colnames(x2) = bnames2
+
 
 #clean up
 rm(key,agedum,pool,raw,black,ltcare,lim,oplace,other,y,yrs,yrsxicd,CRc,RRAc,RRDc,as,home,icd10)

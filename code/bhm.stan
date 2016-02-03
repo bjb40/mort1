@@ -16,7 +16,7 @@ data {
 
 parameters{
   #individual level
-  vector[2] beta; // grand mean coefficients for intercept and slope
+  real beta; // grand mean coefficients for intercept and slope
   vector[P] gamma; //
   real<lower=0> sig; //l1 error; BDA3 388 - uniform gelman 2006; stan manual 66
   real<lower=0> zi; //(scale for intercept)
@@ -26,10 +26,10 @@ parameters{
 transformed parameters {
     vector[IDS] mu_i; // age-specific conditonal effects
     vector[N] yhat;
-    mu_i <- beta[1] + omega_i*zi;
+    mu_i <- omega_i*zi;
 
   for(n in 1:N){
-    yhat[n] <- mu_i[id[n]] + t[n]*beta[2] + z[n]*gamma;
+    yhat[n] <- mu_i[id[n]] + t[n]*beta + z[n]*gamma;
   }
 
 }
@@ -42,7 +42,7 @@ model{
     y ~ normal(yhat,sig);
   
   //prior
-  to_vector(beta) ~ normal(0,5);
+  beta ~ normal(0,5);
   gamma ~ normal(0,5);
   sig ~ normal(0,5);
 
