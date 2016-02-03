@@ -244,6 +244,7 @@ y=yrrac
 id=x1[,'cell']
 t=x1[,'Years']
 z=as.matrix(x1[,!colnames(x1) %in% c('yrrac','yrrdc','Years','cell','Intercept','x')])
+#z=z[,1:9]
 N=length(y)
 IDS=length(unique(id))
 P = ncol(z)
@@ -259,7 +260,7 @@ yrrac1 = stan("bhm.stan", data=c('y','id','t','z','N','IDS','P'),
                #algorithm='HMC',
                chains=3,iter=iters,verbose=T);
 
-sink(paste0(outdir,'stan-output-1000a-cauchy.txt'))
+sink(paste0(outdir,'stan-m1.txt'))
 
 elapsed = get_elapsed_time(yrrac1)
 elapsed = max(rowSums(elapsed))/60 #minutes elapsed
@@ -277,6 +278,11 @@ cat('\nn_eff/minutes:\t\t\t',round(range(summary(yrrac1)$summary[,'n_eff'])/elap
 cat('\n\nParms:\n')
 print(round(sum$summary,3))
 
+cat('\n\nFit:\n')
+print(dic(yrrac1))
+print(waic(yrrac1))
+
+
 sink()
 
 hist(ieffects$summary[,'mean'])
@@ -284,6 +290,109 @@ hist(ieffects$summary[,'mean'])
 yrrac2 = stan("bhm-changepoint.stan", data=c('y','id','t','z','N','IDS','P','TDS','td'),
               #algorithm='HMC',
               chains=3,iter=iters,verbose=T);
+
+
+sink(paste0(outdir,'stan-output-m2.txt'))
+
+elapsed = get_elapsed_time(yrrac2)
+elapsed = max(rowSums(elapsed))/60 #minutes elapsed
+
+sum=summary(yrrac2,pars=c('beta','gamma','zi1','zi2','sig'))
+ieffects=summary(yrrac2,pars='mu_i')
+cat('Rhat range:\t\t\t',round(range(summary(yrrac2)$summary[,'Rhat']),3))
+
+cat('\nIterations:\t\t\t',iters)
+cat('\nElapsed min:\t\t\t',round(elapsed,3))
+cat('\nIters/minute:\t\t\t',round((iters/elapsed),3))
+cat('\nn_eff (samp):\t\t\t',round(range(summary(yrrac2)$summary[,'n_eff']),3))
+cat('\nn_eff/minutes:\t\t\t',round(range(summary(yrrac2)$summary[,'n_eff'])/elapsed,3))
+
+cat('\n\nParms:\n')
+print(round(sum$summary,3))
+
+cat('\n\nFit:\n')
+print(dic(yrrac2))
+print(waic(yrrac2))
+
+sink()
+
+lim=is.finite(yrrdc)
+y=yrrdc[lim]
+id=id[lim]
+t=t[lim]
+z=z[lim,]
+td=td[lim]
+
+N=length(y)
+P=ncol(z)
+IDS=length(unique(id))
+TDS=length(unique(td))
+
+
+yrrdc1 = stan("bhm.stan", data=c('y','id','t','z','N','IDS','P'),
+              #algorithm='HMC',
+              chains=3,iter=iters,verbose=T);
+
+
+
+
+sink(paste0(outdir,'stan-output-m3.txt'))
+
+elapsed = get_elapsed_time(yrrdc1)
+elapsed = max(rowSums(elapsed))/60 #minutes elapsed
+
+sum=summary(yrrdc1,pars=c('beta','gamma','zi','sig'))
+ieffects=summary(yrrdc1,pars='mu_i')
+cat('Rhat range:\t\t\t',round(range(summary(yrrdc1)$summary[,'Rhat']),3))
+
+cat('\nIterations:\t\t\t',iters)
+cat('\nElapsed min:\t\t\t',round(elapsed,3))
+cat('\nIters/minute:\t\t\t',round((iters/elapsed),3))
+cat('\nn_eff (samp):\t\t\t',round(range(summary(yrrdc1)$summary[,'n_eff']),3))
+cat('\nn_eff/minutes:\t\t\t',round(range(summary(yrrdc1)$summary[,'n_eff'])/elapsed,3))
+
+cat('\n\nParms:\n')
+print(round(sum$summary,3))
+
+cat('\n\nFit:\n')
+print(dic(yrrdc1))
+print(waic(yrrdc1))
+
+sink()
+
+
+yrrdc2 = stan("bhm-changepoint.stan", data=c('y','id','t','z','N','IDS','P','TDS','td'),
+              #algorithm='HMC',
+              chains=3,iter=iters,verbose=T);
+
+
+
+
+sink(paste0(outdir,'stan-output-m4.txt'))
+
+elapsed = get_elapsed_time(yrrdc2)
+elapsed = max(rowSums(elapsed))/60 #minutes elapsed
+
+sum=summary(yrrdc2,pars=c('beta','gamma','zi1','zi2','sig'))
+ieffects=summary(yrrdc2,pars='mu_i')
+cat('Rhat range:\t\t\t',round(range(summary(yrrdc2)$summary[,'Rhat']),3))
+
+cat('\nIterations:\t\t\t',iters)
+cat('\nElapsed min:\t\t\t',round(elapsed,3))
+cat('\nIters/minute:\t\t\t',round((iters/elapsed),3))
+cat('\nn_eff (samp):\t\t\t',round(range(summary(yrrdc2)$summary[,'n_eff']),3))
+cat('\nn_eff/minutes:\t\t\t',round(range(summary(yrrdc2)$summary[,'n_eff'])/elapsed,3))
+
+cat('\n\nParms:\n')
+print(round(sum$summary,3))
+
+cat('\n\nFit:\n')
+print(dic(yrrdc2))
+print(waic(yrrdc2))
+
+sink()
+
+
 
 
 #delete three structural zeros
