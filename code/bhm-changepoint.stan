@@ -23,18 +23,16 @@ parameters{
   vector[2] beta; // grand mean coefficients for intercept and slope
   matrix[TDS,P] gamma; //
   real<lower=0> sig;//l1 error; BDA3 388 - uniform gelman 2006; stan manual 66
-  real<lower=0> zi1; //(scale for intercept)
-  //real<lower=0> sig2;//l1 error; BDA3 388 - uniform gelman 2006; stan manual 66
-  real<lower=0> zi2; //(scale for intercept)
-
+  vector<lower=0>[TDS]zi; // scale for correlation matrix
+  cholesky_factor_corr[2] L_Omega; //faster for programming; correlation matrix
   matrix[TDS,IDS] omega_i; //container for random normal draw to distribute cross-cell error
 }
 
 transformed parameters {
     matrix[TDS,IDS] mu_i; // age-specific conditonal effects
     vector[N] yhat;
-    mu_i[1] <- omega_i[1]*zi1;
-    mu_i[2] <- omega_i[2]*zi2;
+    mu_i <- diag_matrix(zi)*L_Omega*omega_i;
+    
 
   for(n in 1:N){
     yhat[n] <- mu_i[td[n],id[n]] + t[n]*beta[td[n]] + z[n]*gamma[td[n]]';
@@ -55,9 +53,8 @@ model{
   
   sig ~ normal(0,5);
 
-  zi1 ~ cauchy(0,5);
-  zi2 ~ cauchy(0,5);
-  
+  zi ~ cauchy(0,5);
+
 }
 
 // see DIC in stan's google mailing list for discussion, BDA3, pp.172-179
@@ -69,6 +66,9 @@ generated quantities {
   real dev;
   //FOR PPD
   vector[N] ppd;
+  matrix[2,2] sigma; //covariance matrix
+  
+  sigma <- quad_form_diag(L_Omega*L_Omega',zi);
 
   dev <- 0;  
   for(n in 1:N){

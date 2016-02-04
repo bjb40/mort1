@@ -275,12 +275,12 @@ yrrac2 = stan("bhm-changepoint.stan", data=c('y','id','t','z','N','IDS','P','TDS
               chains=3,iter=iters,verbose=T);
 
 
-sink(paste0(outdir,'stan-output-m2.txt'))
+sink(paste0(outdir,'stan-output-m2multi.txt'))
 
 elapsed = get_elapsed_time(yrrac2)
 elapsed = max(rowSums(elapsed))/60 #minutes elapsed
 
-sum=summary(yrrac2,pars=c('beta','gamma','zi1','zi2','sig'))
+sum=summary(yrrac2,pars=c('beta','gamma','sigma','sig'))
 ieffects=summary(yrrac2,pars='mu_i')
 cat('Rhat range:\t\t\t',round(range(summary(yrrac2)$summary[,'Rhat']),3))
 
