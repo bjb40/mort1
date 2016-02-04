@@ -55,7 +55,7 @@ model{
 
   zi ~ cauchy(0,5);
   
-  L_Omega ~ lkj_corr_cholesky(1); //1 is equiv to uniform prior; >1 diagonal <1 high corr
+  L_Omega ~ lkj_corr_cholesky(1); //1 is equiv to uniform prior; >1 diagonal <1 high
 
 }
 
@@ -68,9 +68,9 @@ generated quantities {
   real dev;
   //FOR PPD
   vector[N] ppd;
-  matrix[2,2] sigma; //covariance matrix
+  matrix[2,2] Omega; //covariance matrix
   
-  sigma <- quad_form_diag(L_Omega*L_Omega',zi);
+  Omega <- L_Omega*L_Omega';
 
   dev <- 0;  
   for(n in 1:N){
