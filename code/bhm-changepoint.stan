@@ -54,6 +54,8 @@ model{
   sig ~ normal(0,5);
 
   zi ~ cauchy(0,5);
+  
+  L_Omega ~ lkj_corr_cholesky(1); //1 is equiv to uniform prior; >1 diagonal <1 high corr
 
 }
 
