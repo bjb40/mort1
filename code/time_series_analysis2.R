@@ -202,8 +202,6 @@ for(i in 1:nrow(cells)){
   x1[equals,'cell'] = i
 }
 
-
-
 statadat = cbind(yrrac,yrrdc,x1)
 
 write.csv(statadat,paste0(outdir,'stata-series.csv'))
@@ -349,9 +347,6 @@ sink()
 yrrdc2 = stan("bhm-changepoint.stan", data=c('y','id','t','z','N','IDS','P','TDS','td'),
               #algorithm='HMC',
               chains=3,iter=iters,verbose=T);
-
-
-
 
 sink(paste0(outdir,'stan-output-m4.txt'))
 
