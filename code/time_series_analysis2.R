@@ -7,6 +7,9 @@ rm(list=ls())
 #Universals
 #@@@@@@
 
+#functions
+source('funs.R')
+
 rawdir = "H:/projects/mort1/dat~/"
 outdir = "H:/projects/mort1/output/"
 imdir = "H:/projects/mort1/img~/"
@@ -130,8 +133,8 @@ for(y in list(yrrac,yrrdc,ycrc)){
 }
 
 x1 = cbind(
-  rep(1,length(y)),
-  agedum[lim,2:ncol(agedum)],
+  #rep(1,length(y)),
+  agedum[lim,1:ncol(agedum)],
   yrs[lim],
   pool$female[lim], 
   pool$complex[lim],
@@ -141,9 +144,9 @@ x1 = cbind(
   black[lim]
 )
 
-bnames1=c('Intercept',
+bnames1=c(#'Intercept',
           #'Ages',
-          paste0('a',(as[2:length(as)])),
+          paste0('a',(as[1:length(as)])),
           'Years',
           'Female',
           'Complex',
@@ -173,27 +176,9 @@ x2 = cbind(
   pool$ICD10[lim]*pool$complex[lim]
 )
 
-bnames2=c('Intercept',
-         #'Ages',
-         as.character(as[2:length(as)]),
-         'ICD10',
-         'Years',
-         'YearsxICD10',
-         'Female',
-         'Complex',
-         'Home',
-         'Ltcare',
-         'Oplace',
-         'Black',
-         'blackxICD10',
-         'femalexICD10',
-         paste(as.character(as[2:length(as)]),'xICD10',sep=''),
-         'complexxICD10'
-)
-
 colnames(x1) = bnames1
 x1=data.frame(x1)
-colnames(x2) = bnames2
+
 
 #clean up
 rm(key,agedum,pool,raw,black,ltcare,lim,oplace,other,y,yrs,yrsxicd,CRc,RRAc,RRDc,as,home,icd10)
@@ -217,8 +202,6 @@ for(i in 1:nrow(cells)){
   x1[equals,'cell'] = i
 }
 
-
-
 statadat = cbind(yrrac,yrrdc,x1)
 
 write.csv(statadat,paste0(outdir,'stata-series.csv'))
@@ -241,35 +224,156 @@ options(mc.cores = 3) #leave one core free for work
 #@@@@@@
 
 y=yrrac
-id=x1[,'a']
+id=x1[,'cell']
 t=x1[,'Years']
-z=as.matrix(x1[,!colnames(x1) %in% c('yrrac','yrrdc','Years','a','Intercept','x')])
+z=as.matrix(x1[,!colnames(x1) %in% c('yrrac','yrrdc','Years','cell','Intercept','x')])
+#z=z[,1:9]
 N=length(y)
 IDS=length(unique(id))
 P = ncol(z)
-td = t+6 #recenter so ids are not 0
+td = t #initialize
+  td[t<0] = 1 #icd9
+  td[t>=0] = 2 #icd10
+TDS=length(unique(td))
+
+#iters = 5000
+iters = 1000
+
+yrrac1 = stan("bhm.stan", data=c('y','id','t','z','N','IDS','P'),
+               #algorithm='HMC',
+               chains=3,iter=iters,verbose=T);
+
+sink(paste0(outdir,'stan-m1.txt'))
+
+elapsed = get_elapsed_time(yrrac1)
+elapsed = max(rowSums(elapsed))/60 #minutes elapsed
+
+sum=summary(yrrac1,pars=c('beta','gamma','zi','sig'))
+ieffects=summary(yrrac1,pars='mu_i')
+cat('Rhat range:\t\t\t',round(range(summary(yrrac1)$summary[,'Rhat']),3))
+
+cat('\nIterations:\t\t\t',iters)
+cat('\nElapsed min:\t\t\t',round(elapsed,3))
+cat('\nIters/minute:\t\t\t',round((iters/elapsed),3))
+cat('\nn_eff (samp):\t\t\t',round(range(summary(yrrac1)$summary[,'n_eff']),3))
+cat('\nn_eff/minutes:\t\t\t',round(range(summary(yrrac1)$summary[,'n_eff'])/elapsed,3))
+
+cat('\n\nParms:\n')
+print(round(sum$summary,3))
+
+cat('\n\nFit:\n')
+print(dic(yrrac1))
+print(waic(yrrac1))
+
+
+sink()
+
+hist(ieffects$summary[,'mean'])
+
+yrrac2 = stan("bhm-changepoint.stan", data=c('y','id','t','z','N','IDS','P','TDS','td'),
+              #algorithm='HMC',
+              chains=3,iter=iters,verbose=T);
+
+
+sink(paste0(outdir,'stan-output-m2.txt'))
+
+elapsed = get_elapsed_time(yrrac2)
+elapsed = max(rowSums(elapsed))/60 #minutes elapsed
+
+sum=summary(yrrac2,pars=c('beta','gamma','zi1','zi2','sig'))
+ieffects=summary(yrrac2,pars='mu_i')
+cat('Rhat range:\t\t\t',round(range(summary(yrrac2)$summary[,'Rhat']),3))
+
+cat('\nIterations:\t\t\t',iters)
+cat('\nElapsed min:\t\t\t',round(elapsed,3))
+cat('\nIters/minute:\t\t\t',round((iters/elapsed),3))
+cat('\nn_eff (samp):\t\t\t',round(range(summary(yrrac2)$summary[,'n_eff']),3))
+cat('\nn_eff/minutes:\t\t\t',round(range(summary(yrrac2)$summary[,'n_eff'])/elapsed,3))
+
+cat('\n\nParms:\n')
+print(round(sum$summary,3))
+
+cat('\n\nFit:\n')
+print(dic(yrrac2))
+print(waic(yrrac2))
+
+sink()
+
+lim=is.finite(yrrdc)
+y=yrrdc[lim]
+id=id[lim]
+t=t[lim]
+z=z[lim,]
+td=td[lim]
+
+N=length(y)
+P=ncol(z)
+IDS=length(unique(id))
 TDS=length(unique(td))
 
 
-yrrac1 = stan("bhm-cc.stan", data=c('y','id','t','z','N','IDS','P','td','TDS'),
-               #algorithm='HMC',
-               chains=3,iter=250,verbose=T);
+yrrdc1 = stan("bhm.stan", data=c('y','id','t','z','N','IDS','P'),
+              #algorithm='HMC',
+              chains=3,iter=iters,verbose=T);
 
-t = get_elapsed_time(yrrac1)
-t = max(rowSums(t))/60 #minutes elapsed
 
-sum=summary(yrrac1)
-print(range(sum$summary[,'Rhat']))
 
-print(t)
-print(250/t)
-print(range(sum$summary[,'n_eff']/t))
-print(mean(sum$summary[,'n_eff']/t))
 
+sink(paste0(outdir,'stan-output-m3.txt'))
+
+elapsed = get_elapsed_time(yrrdc1)
+elapsed = max(rowSums(elapsed))/60 #minutes elapsed
+
+sum=summary(yrrdc1,pars=c('beta','gamma','zi','sig'))
+ieffects=summary(yrrdc1,pars='mu_i')
+cat('Rhat range:\t\t\t',round(range(summary(yrrdc1)$summary[,'Rhat']),3))
+
+cat('\nIterations:\t\t\t',iters)
+cat('\nElapsed min:\t\t\t',round(elapsed,3))
+cat('\nIters/minute:\t\t\t',round((iters/elapsed),3))
+cat('\nn_eff (samp):\t\t\t',round(range(summary(yrrdc1)$summary[,'n_eff']),3))
+cat('\nn_eff/minutes:\t\t\t',round(range(summary(yrrdc1)$summary[,'n_eff'])/elapsed,3))
+
+cat('\n\nParms:\n')
 print(round(sum$summary,3))
 
+cat('\n\nFit:\n')
+print(dic(yrrdc1))
+print(waic(yrrdc1))
 
-yrrac2 = rungibbs(yrrac,x2)
+sink()
+
+
+yrrdc2 = stan("bhm-changepoint.stan", data=c('y','id','t','z','N','IDS','P','TDS','td'),
+              #algorithm='HMC',
+              chains=3,iter=iters,verbose=T);
+
+sink(paste0(outdir,'stan-output-m4.txt'))
+
+elapsed = get_elapsed_time(yrrdc2)
+elapsed = max(rowSums(elapsed))/60 #minutes elapsed
+
+sum=summary(yrrdc2,pars=c('beta','gamma','zi1','zi2','sig'))
+ieffects=summary(yrrdc2,pars='mu_i')
+cat('Rhat range:\t\t\t',round(range(summary(yrrdc2)$summary[,'Rhat']),3))
+
+cat('\nIterations:\t\t\t',iters)
+cat('\nElapsed min:\t\t\t',round(elapsed,3))
+cat('\nIters/minute:\t\t\t',round((iters/elapsed),3))
+cat('\nn_eff (samp):\t\t\t',round(range(summary(yrrdc2)$summary[,'n_eff']),3))
+cat('\nn_eff/minutes:\t\t\t',round(range(summary(yrrdc2)$summary[,'n_eff'])/elapsed,3))
+
+cat('\n\nParms:\n')
+print(round(sum$summary,3))
+
+cat('\n\nFit:\n')
+print(dic(yrrdc2))
+print(waic(yrrdc2))
+
+sink()
+
+
+
 
 #delete three structural zeros
 yrrdc1 = rungibbs(yrrdc[is.finite(yrrdc)],x1[is.finite(yrrdc),])
