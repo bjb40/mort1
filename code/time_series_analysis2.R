@@ -195,7 +195,7 @@ library('rstan')
 
 rstan_options(auto_write = TRUE)
 options(mc.cores = parallel::detectCores())
-options(mc.cores = 3) #leave one core free for work
+options(mc.cores = 4) #leave one core free for work
 
 #@@@@@@
 #Model 1 yrrac
