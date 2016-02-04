@@ -67,23 +67,31 @@ eststo: xtmixed yrrac a45 a50 a55 a60 a65 a70 a75 a80 a85 ///
  years female complex home ltcare oplace black ///
  || cell:, var reml
 
+ estat ic
+ 
 eststo: xtmixed yrrac a45 a50 a55 a60 a65 a70 a75 a80 a85 ///
  icd10 c.icd10#(c.a45 c.a50 c.a55 c.a60 c.a65 c.a70 c.a75 c.a80 c.a85) ///
  years c.icd10#c.years female c.icd10#c.female black c.icd10#c.black ///
  complex home ltcare oplace ///
   || cell:, var reml
 
-
+estat ic
+  
 eststo: xtmixed yrrdc a45 a50 a55 a60 a65 a70 a75 a80 a85 ///
  years female complex home ltcare oplace black ///
  || cell:, var reml
 
+ estat ic
+ 
 eststo: xtmixed yrrdc a45 a50 a55 a60 a65 a70 a75 a80 a85 ///
  icd10 c.icd10#(c.a45 c.a50 c.a55 c.a60 c.a65 c.a70 c.a75 c.a80 c.a85) ///
  years c.icd10#c.years female c.icd10#c.female black c.icd10#c.black ///
  complex home ltcare oplace ///
  || cell:, var reml
 
+ 
+ estat ic
+ 
 esttab using "H:/projects/mort1/output/hierarchical.rtf", ///
  compress scalars(rank ll) replace wide b(3) se(3) t
  
