@@ -43,7 +43,7 @@ printeff = function(s,c){
   #see function (eff) for more info
   #output is string
   e = rnd(eff(s,c))
-  return(cat(e[1],'<br>[',paste(e[1],e[2],sep=','),']',sep=''))
+  return(cat(e[1],'<br>[',paste(e[2],e[3],sep=','),']',sep=''))
 }
 
 
@@ -91,14 +91,14 @@ for(m in 1:4){
 
 
 #@@@@@@@@@@@@@@@@@@@
-#Put together table of results
+#Put together 2 tables of results
 #@@@@@@@@@@@@@@@@@@@
 
 gammanames = c(as.character(seq(40,85,by=5)),'Female','Complex','Home','Ltcare','Oplace','Black')
 
 #prepare yrrac model (models 1 and 2)
 
-sink(paste0(outdir,'yrrac.txt'))
+sink(paste0(outdir,'yrrac_regtable.txt'))
 
 cat('\n\nTable __. Bayesian regression estimates on logged Relative Rate
     of Acute to Chronic all-cause deaths 1994-2003.\n\n')
@@ -107,7 +107,7 @@ cat('\n\nTable __. Bayesian regression estimates on logged Relative Rate
 #need to check with scott on the "pvalue" test, and read is simulation articles... 
 #need to integrate uncertainty in measure out of this, probably to get a a \tilde(y)
 
-cat('|      |  Model 1 | Model 2-ICD9 | Model 2-ICD10 | M2: Mean Difference in Effects |\n')
+cat('|      |  Model 1 | Model 2-ICD9 | Model 2-ICD10 | M2: ICD10-ICD9 |\n')
 cat('|:-----|---------:|-------------:|--------------:|--------------------------------:|\n')
 
 #year effect - Beta
@@ -119,7 +119,7 @@ cat(printeff(model[[2]]$beta[,2]), '|')
 #bayesian pvalue ICD10 effect < ICD9 effect
 cat(delta(model[[2]]$beta,p=T),'|\n')
 
-#conditional means - gammas
+#conditional means of effects - gammas
 for(e in 1:16){
   cat('|',gammanames[e],'|')
   cat(printeff(model[[1]]$gamma[,e]), '|')
@@ -130,183 +130,124 @@ for(e in 1:16){
   
 }
 
+#variances
 
+####need to confirm terminology -- am I getting standard deviations or variances?
+
+cat('| Level 2 Var |')
+cat(printeff(model[[1]]$zi),'|')
+cat(printeff(model[[2]]$zi[,1]), '|')
+cat(printeff(model[[2]]$zi[,2]), '|')
+cat(delta(model[[2]]$zi,p=T),'|\n')
+
+cat('| Correlation of Level 2 Var |   -   |    |')
+#calculated from L_Omega which is the lower cholesky of the correlation matrix
+# so it is L_Omega %*% t(L_Omega) on the upper or lower diagonal
+
+corr = apply(model[[2]]$L_Omega,1,FUN = function(x) (matrix(x,2,2) %*% t(matrix(x,2,2)))[1,2])
+cat(printeff(corr), '| -  |\n')
+
+cat('| Level 1 Var |')
+cat(printeff(model[[1]]$sig),'|')
+cat(printeff(model[[2]]$sig), '|   |  - |')
+
+cat('\n\nNote: Mean estimates with 95% CI; fit can be input from model summaries')
 
 sink()
 
 
 
 
+#prepare yrrdc model (models 3 and 4)
+
+sink(paste0(outdir,'yrrdc_regtable.txt'))
+
+cat('\n\nTable __. Bayesian regression estimates on logged Relative Rate
+    of Acute to Chronic underlying-cause deaths 1994-2003.\n\n')
 
 
+#need to check with scott on the "pvalue" test, and read is simulation articles... 
+#need to integrate uncertainty in measure out of this, probably to get a a \tilde(y)
 
+cat('|      |  Model 3 | Model 4-ICD9 | Model 4-ICD10 | M4: ICD10-ICD9 |\n')
+cat('|:-----|---------:|-------------:|--------------:|--------------------------------:|\n')
 
+#year effect - Beta
+cat('| Year | ')
+cat(printeff(model[[3]]$beta), '|')
+cat(printeff(model[[4]]$beta[,1]), '|')
+cat(printeff(model[[4]]$beta[,2]), '|')
 
+#bayesian pvalue ICD10 effect < ICD9 effect
+cat(delta(model[[4]]$beta,p=T),'|\n')
 
-
-
-summ = function(l,nms){
-  colnames(l$betas) = nms
-  l$est = apply(l$betas,2,mean)
-  l$estsd = apply(l$betas,2,sd)
-  l$pval = lapply((l$est/l$estsd),dnorm)
-  l$sig = rep('',length(l$pval))
-  names(l$sig) = names(l$sig)
-  l$sig[l$pval<0.05] = '*'
-  l$sig[l$pval<0.01] = '**'
-  l$sig[l$pval<0.001] = '***'
+#conditional means of effects - gammas
+for(e in 1:16){
+  cat('|',gammanames[e],'|')
+  cat(printeff(model[[3]]$gamma[,e]), '|')
+  #model 2 is three dimensional
+  cat(printeff(model[[4]]$gamma[,1,e]), '|')
+  cat(printeff(model[[4]]$gamma[,2,e]), '|')
+  cat(delta(model[[4]]$gamma[,,e],p=T),'|\n')
   
-  return(cbind(round(l$est, digits=3),paste('(',round(l$estsd,digits=3),')',sep=''),l$sig))
 }
 
-m = list(yrrac1=summ(yrrac1,bnames1),
-         yrrac2=summ(yrrac2,bnames2),
-         yrrdc1=summ(yrrdc1,bnames1),
-         yrrdc2=summ(yrrdc2,bnames2),
-         ycrc1=summ(ycrc1,bnames1),
-         ycrc2=summ(ycrc2,bnames2)
-)
+#variances
 
-#need to make a two-tail test and make sure  you get the right tails
+####need to confirm terminology -- am I getting standard deviations or variances?
 
-sink(paste(outdir,'output-',Sys.Date(),'.txt',sep=''))
-print(Sys.Date(),quote='F')
-for(i in 1:length(m)){
-  cat('@@@@@@@@@@@@@@@@@@@\n')
-  print(names(m)[i], quote=F)
-  cat('\n')
-  cat('@@@@@@@@@@@@@@@@@@@\n\n')
-  print(cbind(rownames(m[[i]]), apply(m[[i]],2,paste, '|')), quote=F)
-  cat('\n\nR-Square\n')
-  print(mean(get(names(m)[i])$rsq))
-  print(quantile(get(names(m)[i])$rsq,prob=c(0.025,0.08,0.82,0.975)), quote=F)
-  cat('\n\nobs:\n')
-  print(length(get(names(m)[i])$y))
-  cat('\n\n\n\n')
-}
+cat('| Level 2 Var |')
+cat(printeff(model[[3]]$zi),'|')
+cat(printeff(model[[4]]$zi[,1]), '|')
+cat(printeff(model[[4]]$zi[,2]), '|')
+cat(delta(model[[4]]$zi,p=T),'|\n')
+
+cat('| Correlation of Level 2 Var |   -   |    |')
+#calculated from L_Omega which is the lower cholesky of the correlation matrix
+# so it is L_Omega %*% t(L_Omega) on the upper or lower diagonal
+
+corr = apply(model[[4]]$L_Omega,1,FUN = function(x) (matrix(x,2,2) %*% t(matrix(x,2,2)))[1,2])
+cat(printeff(corr), '| -  |\n')
+
+cat('| Level 1 Var |')
+cat(printeff(model[[3]]$sig),'|')
+cat(printeff(model[[4]]$sig), '|   |  - |')
+
+cat('\n\nNote: Mean estimates with 95% CI; fit can be input from model summaries')
 
 sink()
 
-#bayesian pval for fit examples
-sum(yrrac2$rsq<mean(yrrac1$rsq))/length(yrrac2$rsq)
-sum(yrrdc2$rsq<mean(yrrdc1$rsq))/length(yrrdc2$rsq)
-sum(ycrc2$rsq<mean(ycrc1$rsq))/length(ycrc2$rsq)
-
-#@@@@@
-#test of whether the combined years + yearsxicd10 = 0
-#@@@@@
-
-bpos = which(bnames2 %in% c('Years','YearsxICD10'));
-
-#bayesian p-value
-plot(yrrac2$betas[,bpos])
-
-sl10 = apply(yrrac2$betas[,bpos],1,sum)
-mean(sl10)
-#bayesian pval
-sum(sl10>0)/length(sl10)
-#interval
-quantile(sl10,prob=c(0.025,0.975))
-
-sl10 = apply(yrrdc2$betas[,bpos],1,sum)
-mean(sl10)
-#bayesian pval
-sum(sl10>0)/length(sl10)
-#interval
-quantile(sl10,prob=c(0.025,0.975))
 
 
-#plot (SAVED MANUALLY)
-y9 = y10 = matrix(NA,nrow(yrrac2$betas),5)
+#@@@@@@@@@@@@@@@@@@@
+#Age Specific Plot
+#@@@@@@@@@@@@@@@@@@@
 
-colnames(y9) = -5:-1
-colnames(y10) = 0:4
+#add complexity and age for predicted effect of complexity and age
 
-yb = which(bnames2 == 'Years')
-ib = which(bnames2 == 'Intercept')
-yadd = which(bnames2 == 'YearsxICD10')
-iadd = which(bnames2 == 'ICD10')
+plt = apply(model[[4]]$gamma[,1,1:10],2,eff, c=.84)
+ext = model[[2]]$gamma[,,12]
 
-for (i in 1:5){  
-  y9[,as.character(-1*i)] = yrrac2$betas[,yb]*(-1*i) + yrrac2$betas[,ib]
-  y10[,as.character(i-1)] = yrrac2$betas[,yb]*(i-1) + yrrac2$betas[,yadd]*(i-1) + yrrac2$betas[,ib] + yrrac2$betas[,iadd]
-}
+plt = apply(model[[2]]$gamma[,,1:10],3,FUN=function(x) x + model[[2]]$gamma[,,12]) 
 
 par(mfrow=c(2,1), oma=c(3,3,1,1), mar=c(0.5,1.5,0,0), font.main=1)
 
+plot(1,type='n',ylim=c(-2,-0.6),xlim=c(1,10))
 
-plot(-5:-1,apply(y9,2,mean),xlim=c(-5,4), ylim=c(-1,-.4), type="l", lty=1, xaxt='n',ylab='All-Cause (Log RRA)',xlab='' )
-lines(-5:-1,apply(y9,2,quantile, prob=0.08), lty=2)
-lines(-5:-1,apply(y9,2,quantile, prob=0.92), lty=2)
+plot(1,type='n',ylim=c(0,.5),xlim=c(1,10))
 
-lines(0:4,apply(y10,2,mean), lty=1)
-lines(0:4,apply(y10,2,quantile, prob=0.08), lty=2)
-lines(0:4,apply(y10,2,quantile, prob=0.92), lty=2)
+#pull effects and 84% intervals
+yrrac9 = apply(model[[4]]$gamma[,1,1:10],2,eff, c=.84)
+yrrac10 = apply(model[[4]]$gamma[,2,1:10],2,eff, c=.84)
 
-abline(v=-0.5, lty=3)
-mtext("All-Cause (Log RRA)", side=2, outer=F, line=2, cex=0.8)
-text(-4.75,-0.45,"ICD9")    
-text(0.25,-0.45, 'ICD10')    
-
-
-#underlying cause
-
-for (i in 1:5){  
-  y9[,as.character(-1*i)] = yrrdc2$betas[,yb]*(-1*i) + yrrdc2$betas[,ib]
-  y10[,as.character(i-1)] = yrrdc2$betas[,yb]*(i-1) + yrrdc2$betas[,yadd]*(i-1) + yrrdc2$betas[,ib] + yrrdc2$betas[,iadd]
-}
-
-plot(-5:-1,apply(y9,2,mean),xlim=c(-5,4), ylim=c(-.8,.05), type="l", lty=1, xaxt='n',ylab='Underlying-Cause (Log RRD)',xlab='' )
-lines(-5:-1,apply(y9,2,quantile, prob=0.08), lty=2)
-lines(-5:-1,apply(y9,2,quantile, prob=0.92), lty=2)
-
-lines(0:4,apply(y10,2,mean), lty=1)
-lines(0:4,apply(y10,2,quantile, prob=0.08), lty=2)
-lines(0:4,apply(y10,2,quantile, prob=0.92), lty=2)
-
-abline(v=-0.5, lty=3)
-axis(1,-5:4+1999,at=-5:4)
-mtext("Underlying Cause (Log RRD)", side=2, outer=F, line=2, cex=0.8)
+lines(yrrac9['mean',], type='p',pch=10)
+lines(yrrac9[1,])
+arrows(1:10,yrrac9[2,],1:10,yrrac9[3,],angle=90,code=3,length=.1)
+lines(yrrac10['mean',], type='p',pch=16)
+lines(yrrac10[1,],lty=2)
+arrows(1:10,yrrac10[2,],1:10,yrrac10[3,],angle=90,code=3,length=.1)
 
 
-#@@@@@@
-#(especially for complexity as an explanation)
-
-#cases that are pretty bad are female and black
-medest = rowSums(ycrc1$ppd-ycrc1$ydata>0)/ncol(ycrc1$ppd)
-hist(medest)
-#colnames(ycrc2$xdata) = bnames1
-colMeans(x2[medest>.0275,])
-
-
-#spot checking means looks okay
-mean(ycrc1$ydata[ycrc1$xdata[,'Home'] == 1])
-quantile(
-  colMeans(ycrc1$ppd[ycrc1$xdata[,'Home']==1,]),
-  prob=c(.025,.5,.975)
-)
-
-
-hist(ycrc2$ydata[ycrc2$xdata[,'ICD10'] == 1], prob=T, ylim=c(0,.75))
-lines(density(ycrc2$ppd[ycrc2$xdata[,'ICD10'] == 1]), type="l", lty=2)
-
-plot(density(yrrdc2$ydata[ycrc2$xdata[,'ICD10'] == 1]), prob=T, ylim=c(0,.75))
-lines(density(yrrdc2$ydata[ycrc2$xdata[,'ICD10'] == 0]), prob=T, ylim=c(0,.75), lty=2)
-
-hist(ycrc2$ydata[ycrc2$xdata[,'ICD10'] == 0])
-
-#par(mfrow=1,2)
-lim=ycrc2$xdata[,'Years'] < 0 & ycrc2$xdata[,'Black'] == 1 & ycrc2$xdata[,'65'] == 1
-hist(ycrc1$ydata[lim],prob=T, ylim=c(0,.75))
-lines(density(ycrc1$ppd[lim]), type="l", lty=2)
-lines(density(ycrc2$ppd[lim]), type="l", lty=3)
-
-#hist(yrrdc1$ydata,prob=T, ylim=c(0,.75))
-#lines(density(yrrdc1$ppd), type="l", lty=2)
-
-
-
-#print output---no need for burn-in because it's a gibbs sampler
 
 ageplot = function(posterior){
   

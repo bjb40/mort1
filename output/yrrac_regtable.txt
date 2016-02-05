@@ -3,7 +3,7 @@
 Table __. Bayesian regression estimates on logged Relative Rate
     of Acute to Chronic all-cause deaths 1994-2003.
 
-|      |  Model 1 | Model 2-ICD9 | Model 2-ICD10 | M2: Mean Difference in Effects |
+|      |  Model 1 | Model 2-ICD9 | Model 2-ICD10 | M2: ICD10-ICD9 |
 |:-----|---------:|-------------:|--------------:|--------------------------------:|
 | Year | -0.025<br>[-0.027,-0.024] |-0.018<br>[-0.022,-0.015] |0.002<br>[-0.001,0.006] |0.021<br>[0.015,0.026] |
 | 40 |-0.767<br>[-0.874,-0.662] |-0.700<br>[-0.801,-0.600] |-0.871<br>[-0.976,-0.767] |-0.171<br>[-0.215,-0.127] |
@@ -22,3 +22,8 @@ Table __. Bayesian regression estimates on logged Relative Rate
 | Ltcare |-0.067<br>[-0.141,0.004] |-0.013<br>[-0.086,0.061] |-0.118<br>[-0.194,-0.040] |-0.105<br>[-0.135,-0.076] |
 | Oplace |-0.613<br>[-0.686,-0.538] |-0.605<br>[-0.679,-0.532] |-0.624<br>[-0.702,-0.548] |-0.019<br>[-0.048,0.010] |
 | Black |0.067<br>[0.015,0.117] |0.056<br>[0.002,0.106] |0.082<br>[0.027,0.134] |0.026<br>[0.005,0.047] |
+| Level 2 Var |0.231<br>[0.213,0.251] |0.230<br>[0.212,0.249] |0.238<br>[0.220,0.258] |0.008<br>[-0.003,0.019] |
+| Correlation of Level 2 Var |   -   |    |0.959<br>[0.943,0.972] | -  |
+| Level 1 Var |0.124<br>[0.121,0.128] |0.106<br>[0.103,0.109] |   |  - |
+
+Note: Mean estimates with 95% CI; fit can be input from model summaries
