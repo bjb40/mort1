@@ -225,159 +225,63 @@ sink()
 
 #add complexity and age for predicted effect of complexity and age
 
-plt = apply(model[[4]]$gamma[,1,1:10],2,eff, c=.84)
-ext = model[[2]]$gamma[,,12]
 
-plt = apply(model[[2]]$gamma[,,1:10],3,FUN=function(x) x + model[[2]]$gamma[,,12]) 
+ageplot = function(mod){
+  #input approppiate model number; must be 2 or 4
+    #pull effects and 84% intervals; include predicted effects fro complex = 1
+    #complex = model[[mod]]$gamma[,,12]
+    complex = matrix(0,2,2)
+    yrrac9 = apply(model[[mod]]$gamma[,1,1:10],2,FUN=function(x) eff(x+complex[,1], c=.84))
+    yrrac10 = apply(model[[mod]]$gamma[,2,1:10],2,FUN=function(x) eff(x+complex[,2], c=.84))
+    
+    yl=range(c(yrrac9,yrrac10))
+    
+    plot(1,type='n',ylim=yl,xlim=c(1,10))
+    o = .1 #offset for visibility
+    
+    lines((1:10)-o,yrrac9['mean',], type='p',pch=10)
+    lines(yrrac9[1,])
+    arrows((1:10)-o,yrrac9[2,],(1:10)-o,yrrac9[3,],angle=90,code=3,length=.1)
+    lines((1:10)+o,yrrac10['mean',], type='p',pch=16)
+    lines(yrrac10[1,],lty=2)
+    arrows((1:10)+o,yrrac10[2,],(1:10)+o,yrrac10[3,],angle=90,code=3,length=.1)
+
+}
 
 par(mfrow=c(2,1), oma=c(3,3,1,1), mar=c(0.5,1.5,0,0), font.main=1)
 
-plot(1,type='n',ylim=c(-2,-0.6),xlim=c(1,10))
-
-plot(1,type='n',ylim=c(0,.5),xlim=c(1,10))
-
-#pull effects and 84% intervals
-yrrac9 = apply(model[[4]]$gamma[,1,1:10],2,eff, c=.84)
-yrrac10 = apply(model[[4]]$gamma[,2,1:10],2,eff, c=.84)
-
-lines(yrrac9['mean',], type='p',pch=10)
-lines(yrrac9[1,])
-arrows(1:10,yrrac9[2,],1:10,yrrac9[3,],angle=90,code=3,length=.1)
-lines(yrrac10['mean',], type='p',pch=16)
-lines(yrrac10[1,],lty=2)
-arrows(1:10,yrrac10[2,],1:10,yrrac10[3,],angle=90,code=3,length=.1)
+ageplot(2)
+ageplot(4)
 
 
+d.all=apply(model[[2]]$gamma[,,1:10],3,delta)
+d.under = apply(model[[4]]$gamma[,,1:10],3,delta)
 
-ageplot = function(posterior){
-  
-  rpost = posterior$betas
-  rpost[,22:30] = rpost[,22:30] + rpost[,11] + rpost[,2:10] #+ 4*post[,12]
-  # adjust for year effect: only for year 1998 (prior to change)
-  rpost[,2:10] = rpost[,2:10] + -1*rpost[,12] 
-  post = apply(rpost,2,quantile, prob=c(0.08,0.5,0.82))
-  post_mean = apply(rpost,2,mean)
-  rm(rpost)
-  
-  plot(1:9+.5,post_mean[2:10], pch=10,
-       ylim=c(min(post[,c(2:10,22:30)]), max(post[,c(2:10,22:30)])), 
-       xlim=c(1,10), 
-       xaxt="n")
-  segments(1:9+.5,post[1,2:10],1:9+.5,post[3,2:10])
-  segments(1:9+.4,post[1,2:10],2:10-.4,post[1,2:10]) 
-  segments(1:9+.4,post[1,2:10],2:10-.4,post[1,2:10])
-  segments(1:9+.4,post[3,2:10],2:10-.4,post[3,2:10]) 
-  segments(1:9+.4,post[3,2:10],2:10-.4,post[3,2:10])
-  
-  lines(1:9+.5,post_mean[22:30], type='p', pch=16)
-  segments(1:9+.5,post[1,22:30],1:9+.5,post[3,22:30], lty=2)
-  segments(1:9+.4,post[1,22:30],2:10-.4,post[1,22:30], lty=2)
-  segments(1:9+.4,post[1,22:30],2:10-.4,post[1,22:30], lty=2)
-  segments(1:9+.4,post[3,22:30],2:10-.4,post[3,22:30], lty=2)
-  segments(1:9+.4,post[3,22:30],2:10-.4,post[3,22:30], lty=2)
-}
+yl = range(c(d.all,d.under))
+
+par(mfrow=c(1,1))
+plot(1,type='n',ylim=yl,xlim=c(1,10))
+
+polygon(c(1:10, rev(1:10)), c(d.all[2,],rev(d.all[3,])), 
+        col="gray90", border=NA)
+polygon(c(1:10, rev(1:10)), c(d.under[2,],rev(d.under[3,])), 
+        col="gray90", border=NA)
+
+lines(1:10,d.all[1,], type="l",ylim=yl)
+lines(1:10,d.under[1,], lty=2)
+
+abline(h=0)
 
 
-#figure 3 - saved manually
-par(mfrow=c(2,1), oma=c(3,3,1,1), mar=c(0.5,1.5,0,0), font.main=1)
-ageplot(yrrac2)
-legend('topright',c('ICD9','ICD10'), lty=c(1,2), pch=c(10,16), bty='n', cex=0.8)
-mtext("All-Cause (Log RRA)", side=2, outer=F, line=2, cex=0.8)
-ageplot(yrrdc2)
-mtext("Underlying Cause (Log RRD)", side=2, outer=F, line=2, cex=0.8)
-axis(1,at=1:9+.5, labels=colnames(x2[,2:10]))
 
-#PPD year plots for 45, 65, and 85
+#@@@@@@@@@@@
+#time series plot with ppd
+#@@@@@@@@@@@
 
-#construct 84% intervals
-ppd = ycrc2$ppd
-y = ycrc2$ydata
-xdat = ycrc2$xdata
-yr = unique(xdat[,"Years"])
+#summarize posterior draws
+ppd.yrrac = model[[2]]$ppd
 
 
-plim = list()
-pmean = list()
-yy = list()
-
-for(i in yr){
-  #lim = (xdat[,'65'] == 1 | xdat[,'70'] == 1 | xdat[,'75'] == 1 | xdat[,'80']==1) & xdat[,'Years'] == i & xdat[,'Complex'] ==1
-  lim = xdat[,'Years'] == i 
-  yy[[as.character(i)]] = mean(y[lim])
-  plim[[as.character(i)]] = quantile(ppd[lim,], prob=c(0.08,0.82,0.025,0.975))
-  pmean[[as.character(i)]] = mean(ppd[lim,])
-}
-low=do.call(rbind,plim)[,1]
-up=do.call(rbind,plim)[,2]
-low2=do.call(rbind,plim)[,3]
-up2=do.call(rbind,plim)[,4]
-
-#vertlim = c(min(low2,yy)-.5,max(up2,yy)+.5)
-vertlim=c(-3.2,0)
-
-plot(unlist(pmean), ylim=vertlim, pch=15, xaxt="n", ylab="Log All-Cause Ratio", xlab="Year")
-lines(unlist(yy), type="p",pch=0)
-lines(low,type="l", lty=3)
-lines(up,type="l",lty=3)
-#lines(up2,lty=2)
-#lines(low2,lty=2)
-
-plim = list()
-pmean = list()
-yy = list()
-
-for(i in yr){
-  lim = xdat[,'65'] == 1 & xdat[,'Years'] == i & xdat[,'Complex'] == 0
-  yy[[as.character(i)]] = mean(y[lim])
-  plim[[as.character(i)]] = quantile(ppd[lim,], prob=c(0.08,0.82,0.025,0.975))
-  pmean[[as.character(i)]] = mean(ppd[lim,])
-}
-low=do.call(rbind,plim)[,1]
-up=do.call(rbind,plim)[,2]
-low2=do.call(rbind,plim)[,3]
-up2=do.call(rbind,plim)[,4]
-
-lines(unlist(pmean), type="p", pch=16)
-lines(unlist(yy), type="p",pch=1)
-lines(low,type="l", lty=2)
-lines(up,type="l",lty=2)
-#lines(up2,lty=2)
-#lines(low2,lty=2)
-
-abline(v=which(yr==0)-0.5, lty=3)
-axis(1,yr+1999,at=1:length(yr))
-legend('topleft',c('Complex','Not Complex'), pch=c(15,16), bty='n')
-#abline(h=0)
-
-#@@@@
-#simple plots
-#@@@@
-
-yrrac2$ppd
-
-#@@@@@@@
-#PPD ANOVA checks
-#@@@@@@@
-
-#are ICD10 ppd's more negative than ICD9?
-plot(density(yrrac2$ppd[yrrac2$xdata[,'ICD10']==0,]))
-lines(density(yrrac2$ppd[yrrac2$xdata[,'ICD10']==1,]), lty=2)
-
-#omnibus
-t.test(yrrac2$ppd[yrrac2$xdata[,'ICD10']==0],yrrac2$ppd[yrrac2$xdata[,'ICD10']==1,])
-t.test(yrrdc2$ppd[yrrdc2$xdata[,'ICD10']==0],yrrdc2$ppd[yrrdc2$xdata[,'ICD10']==1,])
-t.test(ycrc2$ppd[ycrc2$xdata[,'ICD10']==0],ycrc2$ppd[ycrc2$xdata[,'ICD10']==1,])
-
-age='75'
-
-t.test(yrrac2$ppd[yrrac2$xdata[,'ICD10']==0 & yrrac2$xdata[,age]==1]
-       ,yrrac2$ppd[yrrac2$xdata[,'ICD10']==1 & yrrac2$xdata[,age]==1,])
-
-t.test(yrrdc2$ppd[yrrdc2$xdata[,'ICD10']==0 & yrrdc2$xdata[,age]==1],
-       yrrdc2$ppd[yrrdc2$xdata[,'ICD10']==1 & yrrdc2$xdata[,age]==1,])
-
-t.test(ycrc2$ppd[ycrc2$xdata[,'ICD10']==0 & ycrc2$xdata[,age]==1],
-       ycrc2$ppd[ycrc2$xdata[,'ICD10']==1 & ycrc2$xdata[,age]==1,])
 
 
 
