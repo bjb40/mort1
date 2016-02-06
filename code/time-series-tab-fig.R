@@ -229,22 +229,28 @@ sink()
 ageplot = function(mod){
   #input approppiate model number; must be 2 or 4
     #pull effects and 84% intervals; include predicted effects fro complex = 1
-    #complex = model[[mod]]$gamma[,,12]
-    complex = matrix(0,2,2)
-    yrrac9 = apply(model[[mod]]$gamma[,1,1:10],2,FUN=function(x) eff(x+complex[,1], c=.84))
-    yrrac10 = apply(model[[mod]]$gamma[,2,1:10],2,FUN=function(x) eff(x+complex[,2], c=.84))
+    complex = model[[mod]]$gamma[,,12]
+    #complex = matrix(0,2,2)
+    yrrac9 = apply(model[[mod]]$gamma[,1,1:10],2,FUN=function(x) eff(exp(x), c=.4))
+    yrrac10 = apply(model[[mod]]$gamma[,2,1:10],2,FUN=function(x) eff(exp(x), c=.4))
     
     yl=range(c(yrrac9,yrrac10))
     
-    plot(1,type='n',ylim=yl,xlim=c(1,10))
-    o = .1 #offset for visibility
+    plot(1,type='n',ylim=yl,xlim=c(1,10),log='y')
+    o = 0 #offset for visibility
+    
+    polygon(c((1:10)-o,rev((1:10)-0)),c(yrrac9[2,],rev(yrrac9[3,])),
+            border=NA, col=gray(0.9))
+    polygon(c((1:10)-o,rev((1:10)-0)),c(yrrac10[2,],rev(yrrac10[3,])),
+            border=NA, col=gray(0.9))
     
     lines((1:10)-o,yrrac9['mean',], type='p',pch=10)
     lines(yrrac9[1,])
-    arrows((1:10)-o,yrrac9[2,],(1:10)-o,yrrac9[3,],angle=90,code=3,length=.1)
+    #arrows((1:10)-o,yrrac9[2,],(1:10)-o,yrrac9[3,],angle=90,code=3,length=.1)
+    
     lines((1:10)+o,yrrac10['mean',], type='p',pch=16)
     lines(yrrac10[1,],lty=2)
-    arrows((1:10)+o,yrrac10[2,],(1:10)+o,yrrac10[3,],angle=90,code=3,length=.1)
+    #arrows((1:10)+o,yrrac10[2,],(1:10)+o,yrrac10[3,],angle=90,code=3,length=.1)
 
 }
 
@@ -262,10 +268,10 @@ yl = range(c(d.all,d.under))
 par(mfrow=c(1,1))
 plot(1,type='n',ylim=yl,xlim=c(1,10))
 
-polygon(c(1:10, rev(1:10)), c(d.all[2,],rev(d.all[3,])), 
-        col="gray90", border=NA)
-polygon(c(1:10, rev(1:10)), c(d.under[2,],rev(d.under[3,])), 
-        col="gray90", border=NA)
+#polygon(c(1:10, rev(1:10)), c(d.all[2,],rev(d.all[3,])), 
+#        col="gray90", border=NA)
+#polygon(c(1:10, rev(1:10)), c(d.under[2,],rev(d.under[3,])), 
+#        col="gray90", border=NA)
 
 lines(1:10,d.all[1,], type="l",ylim=yl)
 lines(1:10,d.under[1,], lty=2)
@@ -279,10 +285,29 @@ abline(h=0)
 #@@@@@@@@@@@
 
 #summarize posterior draws
-ppd.yrrac = model[[2]]$ppd
+
+ppd.yrrac = t(model[[2]]$ppd)
+  tst.yrrac = aggregate(ppd.yrrac,by=list(dat$Years),mean)
+  plt.yrrac = apply(tst.yrrac[,2:10000],1,eff)
+
+ppd.yrrdc = t(model[[4]]$ppd)
+  tst.yrrdc = aggregate(ppd.yrrdc,by=list(dat$Years[is.finite(dat$yrrdc)]),mean)
+  plt.yrrdc = apply(tst.yrrdc[,2:10000],1,eff)
+  
+    
+ob.yrrac=aggregate(dat$yrrac,by=list(dat$Years),mean)
+ob.yrrdc=aggregate(dat$yrrdc[is.finite(dat$yrrdc)],by=list(dat$Years[is.finite(dat$yrrdc)]),mean)
+
+par(mfrow=c(2,1))
 
 
+yl=range(c(ob.yrrac$x,plt.yrrac))
+plot(1:10,plt.yrrac[1,],type="l",ylim=yl,xaxt='n')
+segments(1:10,plt.yrrac[2,],1:10,plt.yrrac[3,])
+lines(1:10,ob.yrrac$x,type="p")
 
-
-
+yl=range(c(ob.yrrdc$x,plt.yrrdc))
+plot(1:10,plt.yrrdc[1,],type="l",ylim=yl,xaxt='n')
+segments(1:10,plt.yrrdc[2,],1:10,plt.yrrdc[3,])
+lines(1:10,ob.yrrdc$x,type="p")
 
