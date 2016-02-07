@@ -263,51 +263,96 @@ ageplot(4)
 d.all=apply(model[[2]]$gamma[,,1:10],3,delta)
 d.under = apply(model[[4]]$gamma[,,1:10],3,delta)
 
-yl = range(c(d.all,d.under))
+xl = range(c(d.all,d.under))
+
+#need lables for age
+png(paste0(imdir,'age_diff.png'))
 
 par(mfrow=c(1,1))
-plot(1,type='n',ylim=yl,xlim=c(1,10))
+plot(1,type='n',xlim=xl,ylim=c(1,10))
 
 #polygon(c(1:10, rev(1:10)), c(d.all[2,],rev(d.all[3,])), 
 #        col="gray90", border=NA)
 #polygon(c(1:10, rev(1:10)), c(d.under[2,],rev(d.under[3,])), 
 #        col="gray90", border=NA)
 
-lines(1:10,d.all[1,], type="l",ylim=yl)
-lines(1:10,d.under[1,], lty=2)
+lines(d.all[1,],1:10, type='p')
+segments(d.all[2,],1:10,d.all[3,],1:10)
+segments(d.under[2,],1:10,d.under[3,],1:10)
+lines(d.under[1,],1:10, type='p')
+abline(v=0)
 
-abline(h=0)
-
-
+dev.off()
 
 #@@@@@@@@@@@
 #time series plot with ppd
 #@@@@@@@@@@@
 
 #summarize posterior draws
+#can take off exponentials, maybe
 
-ppd.yrrac = t(model[[2]]$ppd)
+ppd.yrrac = t(exp(model[[2]]$ppd))
+#ppd.yrrac = t(model[[2]]$ppd)
   tst.yrrac = aggregate(ppd.yrrac,by=list(dat$Years),mean)
   plt.yrrac = apply(tst.yrrac[,2:10000],1,eff)
 
-ppd.yrrdc = t(model[[4]]$ppd)
+ppd.yrrdc = t(exp(model[[4]]$ppd))
+#ppd.yrrdc = t(model[[4]]$ppd)
   tst.yrrdc = aggregate(ppd.yrrdc,by=list(dat$Years[is.finite(dat$yrrdc)]),mean)
   plt.yrrdc = apply(tst.yrrdc[,2:10000],1,eff)
   
-    
-ob.yrrac=aggregate(dat$yrrac,by=list(dat$Years),mean)
-ob.yrrdc=aggregate(dat$yrrdc[is.finite(dat$yrrdc)],by=list(dat$Years[is.finite(dat$yrrdc)]),mean)
+ob.yrrac=aggregate(exp(dat$yrrac),by=list(dat$Years),mean)
+ob.yrrdc=aggregate(exp(dat$yrrdc[is.finite(dat$yrrdc)]),by=list(dat$Years[is.finite(dat$yrrdc)]),mean)
+#ob.yrrac=aggregate(dat$yrrac,by=list(dat$Years),mean)
+#ob.yrrdc=aggregate(dat$yrrdc[is.finite(dat$yrrdc)],by=list(dat$Years[is.finite(dat$yrrdc)]),mean)
+  
+png(paste0(imdir,'series.png'))  
+par(mfrow=c(1,1),mar=c(1,3,1,3))
 
-par(mfrow=c(2,1))
+yl=range(c(ob.yrrac$x,plt.yrrac,ob.yrrdc$x,plt.yrrdc))
 
+#yl=range(c(ob.yrrac$x,plt.yrrac))
+plot(1,type='n',ylim=yl,xlim=c(1,10),xaxt='n')
+     #,log="y")
+#split icd9
+polygon(c(1:5,rev(1:5)),
+        c(plt.yrrac[2,1:5],rev(plt.yrrac[3,1:5])),
+        border=NA, col=gray(0.9)
+)
+lines(1:5,plt.yrrac[1,1:5],type="l")
+lines(1:5,ob.yrrac$x[1:5],type="p",pch=10)
+#icd10
+polygon(c(6:10,rev(6:10)),
+        c(plt.yrrac[2,6:10],rev(plt.yrrac[3,6:10])),
+        border=NA, col=gray(0.9)
+)
+lines(6:10,plt.yrrac[1,6:10],type="l",lty=2)
+lines(6:10,ob.yrrac$x[6:10],type="p",pch=16)
 
-yl=range(c(ob.yrrac$x,plt.yrrac))
-plot(1:10,plt.yrrac[1,],type="l",ylim=yl,xaxt='n')
-segments(1:10,plt.yrrac[2,],1:10,plt.yrrac[3,])
-lines(1:10,ob.yrrac$x,type="p")
+abline(v=5.5)
+#can add text labels for yrrac and yrrdc
+#as well as icd9 and 10
 
-yl=range(c(ob.yrrdc$x,plt.yrrdc))
-plot(1:10,plt.yrrdc[1,],type="l",ylim=yl,xaxt='n')
-segments(1:10,plt.yrrdc[2,],1:10,plt.yrrdc[3,])
-lines(1:10,ob.yrrdc$x,type="p")
+#yl=range(c(ob.yrrdc$x,plt.yrrdc))
+#plot(1,type='n',ylim=yl,xlim=c(1,10),xaxt='n')
+#split icd9
+polygon(c(1:5,rev(1:5)),
+        c(plt.yrrdc[2,1:5],rev(plt.yrrdc[3,1:5])),
+        border=NA, col=gray(0.9)
+)
+lines(1:5,plt.yrrdc[1,1:5],type="l")
+lines(1:5,ob.yrrdc$x[1:5],type="p",pch=10)
 
+#icd10
+polygon(c(6:10,rev(6:10)),
+        c(plt.yrrdc[2,6:10],rev(plt.yrrdc[3,6:10])),
+        border=NA, col=gray(0.9)
+)
+lines(6:10,plt.yrrdc[1,6:10],type="l",lty=2)
+lines(6:10,ob.yrrdc$x[6:10],type="p",pch=16)
+
+axis(1,at=1:10,labels=1994:2003)
+T=axTicks(2) #get axis ticks from left side
+#plot logged rate
+axis(4,at=T,labels=rnd(log(T),2))
+dev.off()
