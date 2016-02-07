@@ -196,7 +196,7 @@ library('rstan')
 
 rstan_options(auto_write = TRUE)
 options(mc.cores = parallel::detectCores())
-options(mc.cores = 4) #leave one core free for work
+options(mc.cores = 3) #leave one core free for work
 
 #@@@@@@
 #Model 1 yrrac
@@ -215,8 +215,8 @@ td = t #initialize
   td[t>=0] = 2 #icd10
 TDS=length(unique(td))
 
-iters = 5000
-#iters = 1000
+#iters = 5000
+iters = 1000
 
 yrrac1 = stan("bhm.stan", data=c('y','id','t','z','N','IDS','P'),
                seed=1404399575,chains=4,iter=iters,verbose=T);
@@ -252,12 +252,12 @@ sink()
 rm(yrrac1,samp)
 
 yrrac2 = stan("bhm-changepoint.stan", data=c('y','id','t','z','N','IDS','P','TDS','td'),
-              seed=1404399575,chains=4,iter=iters,verbose=F);
+              seed=1404399575,chains=3,iter=iters,verbose=F);
 
-samp = extract(yrrac2,pars=c('beta','gamma','zi','sig','loglik','dev','ppd','L_Omega'))
+samp = extract(yrrac2,pars=c('beta','gamma','zi','sig','loglik','dev','ppd','L_Omega','mu_i'))
 save(samp,file=paste0(outdir,'m2samp.gz'),compress=T)
 
-sink(paste0(outdir,'stan-output-m2multi.txt'))
+sink(paste0(outdir,'stan-output-m2.txt'))
 
 elapsed = get_elapsed_time(yrrac2)
 elapsed = max(rowSums(elapsed))/60 #minutes elapsed
@@ -328,7 +328,7 @@ sink()
 rm(yrrdc1,samp)
 
 yrrdc2 = stan("bhm-changepoint.stan", data=c('y','id','t','z','N','IDS','P','TDS','td'),
-              seed=1404399575,chains=4,iter=iters,verbose=F);
+              seed=1404399575,chains=3,iter=iters,verbose=F);
 
 samp = extract(yrrdc2,pars=c('beta','gamma','zi','sig','loglik','dev','ppd','L_Omega'))
 save(samp,file=paste0(outdir,'m4samp.gz'),compress=T)

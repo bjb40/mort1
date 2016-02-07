@@ -231,8 +231,8 @@ ageplot = function(mod){
     #pull effects and 84% intervals; include predicted effects fro complex = 1
     complex = model[[mod]]$gamma[,,12]
     #complex = matrix(0,2,2)
-    yrrac9 = apply(model[[mod]]$gamma[,1,1:10],2,FUN=function(x) eff(exp(x), c=.4))
-    yrrac10 = apply(model[[mod]]$gamma[,2,1:10],2,FUN=function(x) eff(exp(x), c=.4))
+    yrrac9 = apply(model[[mod]]$gamma[,1,1:10],2,FUN=function(x) eff(exp(x), c=.84))
+    yrrac10 = apply(model[[mod]]$gamma[,2,1:10],2,FUN=function(x) eff(exp(x), c=.84))
     
     yl=range(c(yrrac9,yrrac10))
     
@@ -254,11 +254,12 @@ ageplot = function(mod){
 
 }
 
-par(mfrow=c(2,1), oma=c(3,3,1,1), mar=c(0.5,1.5,0,0), font.main=1)
+png(paste0(imdir,'ageplots.png'))
 
+par(mfrow=c(2,1), oma=c(3,3,1,1), mar=c(0.5,1.5,0,0), font.main=1)
 ageplot(2)
 ageplot(4)
-
+dev.off()
 
 d.all=apply(model[[2]]$gamma[,,1:10],3,delta)
 d.under = apply(model[[4]]$gamma[,,1:10],3,delta)

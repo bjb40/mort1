@@ -22,8 +22,8 @@ parameters{
   #individual level
   vector[2] beta; // grand mean coefficients for intercept and slope
   matrix[TDS,P] gamma; //
-  real<lower=0> sig;//l1 error; BDA3 388 - uniform gelman 2006; stan manual 66
-  vector<lower=0>[TDS]zi; // scale for correlation matrix
+  vector<lower=0>[2] sig;//l1 error; BDA3 388 - uniform gelman 2006; stan manual 66
+  vector<lower=0>[TDS] zi; // scale for correlation matrix
   cholesky_factor_corr[2] L_Omega; //faster for programming; correlation matrix
   matrix[TDS,IDS] omega_i; //container for random normal draw to distribute cross-cell error
 }
@@ -31,11 +31,15 @@ parameters{
 transformed parameters {
     matrix[TDS,IDS] mu_i; // age-specific conditonal effects
     vector[N] yhat;
+    vector[N] sigma; #container for 2 level 1 variances
     mu_i <- diag_matrix(zi)*L_Omega*omega_i;
+
     
 
   for(n in 1:N){
     yhat[n] <- mu_i[td[n],id[n]] + t[n]*beta[td[n]] + z[n]*gamma[td[n]]';
+    
+    sigma[n] <- sig[td[n]];
   }
 
 }
@@ -44,7 +48,7 @@ model{
 
   to_vector(omega_i) ~ normal(0,1);
 
-  y ~ normal(yhat,sig);
+  y ~ normal(yhat,sigma);
   
   //prior
   beta ~ normal(0,5);
@@ -74,8 +78,8 @@ generated quantities {
 
   dev <- 0;  
   for(n in 1:N){
-    loglik[n] <- (normal_log(y[n],yhat[n],sig));
-    dev <- dev-(2*normal_log(y[n],yhat[n],sig));
-    ppd[n] <- normal_rng(yhat[n],sig);
+    loglik[n] <- (normal_log(y[n],yhat[n],sigma[n]));
+    dev <- dev-(2*normal_log(y[n],yhat[n],sigma[n]));
+    ppd[n] <- normal_rng(yhat[n],sigma[n]);
   }
 }
