@@ -52,13 +52,9 @@ model{
   
   //prior
   beta ~ normal(0,5);
-  to_vector(gamma[1]) ~ normal(0,5);
-  to_vector(gamma[2]) ~ normal(gamma[2],5);
-  
+  to_vector(gamma) ~ normal(0,5);
   sig ~ normal(0,5);
-
   zi ~ cauchy(0,5);
-  
   L_Omega ~ lkj_corr_cholesky(1); //1 is equiv to uniform prior; >1 diagonal <1 high
 
 }

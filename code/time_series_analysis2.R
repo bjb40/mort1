@@ -190,13 +190,14 @@ rm(statadat)
 #@@@@@@@@@@@@@@@@@@@
 #Run and Collect Models
 #@@@@@@@@@@@@@@@@@@@
-
+chains=4
+  
 #load rstan
 library('rstan')
 
 rstan_options(auto_write = TRUE)
 options(mc.cores = parallel::detectCores())
-options(mc.cores = 3) #leave one core free for work
+options(mc.cores = chains) #leave one core free for work
 
 #@@@@@@
 #Model 1 yrrac
@@ -215,11 +216,12 @@ td = t #initialize
   td[t>=0] = 2 #icd10
 TDS=length(unique(td))
 
+iters=7500
 #iters = 5000
-iters = 1000
+#iters = 1000
 
 yrrac1 = stan("bhm.stan", data=c('y','id','t','z','N','IDS','P'),
-               seed=1404399575,chains=4,iter=iters,verbose=T);
+               seed=1404399575,chains=chains,iter=iters,verbose=T);
 
 samp = extract(yrrac1,pars=c('beta','gamma','zi','sig','loglik','dev','ppd'))
 save(samp,file=paste0(outdir,'m1samp.gz'),compress=T)
@@ -252,7 +254,7 @@ sink()
 rm(yrrac1,samp)
 
 yrrac2 = stan("bhm-changepoint.stan", data=c('y','id','t','z','N','IDS','P','TDS','td'),
-              seed=1404399575,chains=3,iter=iters,verbose=F);
+              seed=1404399575,chains=chains,iter=iters,verbose=F);
 
 samp = extract(yrrac2,pars=c('beta','gamma','zi','sig','loglik','dev','ppd','L_Omega','mu_i'))
 save(samp,file=paste0(outdir,'m2samp.gz'),compress=T)
@@ -296,7 +298,7 @@ TDS=length(unique(td))
 
 
 yrrdc1 = stan("bhm.stan", data=c('y','id','t','z','N','IDS','P'),
-              seed=1404399575,chains=4,iter=iters,verbose=F);
+              seed=1404399575,chains=chains,iter=iters,verbose=F);
 
 samp = extract(yrrdc1,pars=c('beta','gamma','zi','sig','loglik','dev','ppd'))
 save(samp,file=paste0(outdir,'m3samp.gz'),compress=T)
@@ -328,9 +330,9 @@ sink()
 rm(yrrdc1,samp)
 
 yrrdc2 = stan("bhm-changepoint.stan", data=c('y','id','t','z','N','IDS','P','TDS','td'),
-              seed=1404399575,chains=3,iter=iters,verbose=F);
+              seed=1404399575,chains=chains,iter=iters,verbose=F);
 
-samp = extract(yrrdc2,pars=c('beta','gamma','zi','sig','loglik','dev','ppd','L_Omega'))
+samp = extract(yrrdc2,pars=c('beta','gamma','zi','sig','loglik','dev','ppd','L_Omega','mu_i'))
 save(samp,file=paste0(outdir,'m4samp.gz'),compress=T)
 
 sink(paste0(outdir,'stan-output-m4.txt'))
