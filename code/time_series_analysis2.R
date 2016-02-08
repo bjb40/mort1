@@ -185,7 +185,7 @@ statadat = cbind(yrrac,yrrdc,x1)
 
 write.csv(statadat,paste0(outdir,'stata-series.csv'))
 
-rm(statadat)
+rm(statadat,cells,cellsub,equals,i)
 
 #@@@@@@@@@@@@@@@@@@@
 #Run and Collect Models
@@ -231,7 +231,6 @@ elapsed = get_elapsed_time(yrrac1)
 elapsed = max(rowSums(elapsed))/60 #minutes elapsed
 
 sum=summary(yrrac1,pars=c('beta','gamma','zi','sig'))
-ieffects=summary(yrrac1,pars='mu_i')
 cat('Seed:      \t\t\t',get_seed(yrrac1))
 cat('Rhat range:\t\t\t',round(range(summary(yrrac1)$summary[,'Rhat']),3))
 
@@ -309,9 +308,7 @@ elapsed = get_elapsed_time(yrrdc1)
 elapsed = max(rowSums(elapsed))/60 #minutes elapsed
 
 sum=summary(yrrdc1,pars=c('beta','gamma','zi','sig'))
-ieffects=summary(yrrdc1,pars='mu_i')
 cat('Rhat range:\t\t\t',round(range(summary(yrrdc1)$summary[,'Rhat']),3))
-
 cat('\nIterations:\t\t\t',iters)
 cat('\nElapsed min:\t\t\t',round(elapsed,3))
 cat('\nIters/minute:\t\t\t',round((iters/elapsed),3))
@@ -341,7 +338,6 @@ elapsed = get_elapsed_time(yrrdc2)
 elapsed = max(rowSums(elapsed))/60 #minutes elapsed
 
 sum=summary(yrrdc2,pars=c('beta','gamma','zi','sig','L_Omega'))
-ieffects=summary(yrrdc2,pars='mu_i')
 cat('Rhat range:\t\t\t',round(range(summary(yrrdc2)$summary[,'Rhat']),3))
 
 cat('\nIterations:\t\t\t',iters)
