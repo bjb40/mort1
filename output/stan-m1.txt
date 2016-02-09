@@ -1,17 +1,106 @@
-Stan model 'bhm' does not contain samples.
-Stan model 'bhm' does not contain samples.
-Seed:      			Stan model 'bhm' does not contain samples.
-Rhat range:			 Inf -Inf
+Seed:      			 1404399575Rhat range:			 0.999 1.044
 Iterations:			 2500
-Iters/minute:			 Stan model 'bhm' does not contain samples.
-
-n_eff (samp):			 Inf -InfStan model 'bhm' does not contain samples.
-
-n_eff/minutes:			 
+Elapsed min:			 9.646
+Iters/minute:			 259.184
+n_eff (samp):			 127.9 3750
+n_eff/minutes:			 13.26 388.776
 
 Parms:
+            mean se_mean    sd   2.5%    25%    50%    75%  97.5%    n_eff  Rhat
+beta      -0.025   0.000 0.005 -0.036 -0.029 -0.025 -0.022 -0.015  698.980 1.003
+gamma[1]  -0.769   0.005 0.059 -0.882 -0.810 -0.770 -0.728 -0.653  135.123 1.025
+gamma[2]  -1.104   0.005 0.061 -1.226 -1.147 -1.102 -1.061 -0.989  127.900 1.019
+gamma[3]  -1.409   0.004 0.058 -1.514 -1.449 -1.412 -1.372 -1.284  197.700 1.009
+gamma[4]  -1.607   0.004 0.056 -1.712 -1.645 -1.607 -1.571 -1.492  157.209 1.021
+gamma[5]  -1.730   0.004 0.057 -1.837 -1.770 -1.730 -1.692 -1.621  183.481 1.003
+gamma[6]  -1.767   0.005 0.057 -1.877 -1.806 -1.768 -1.730 -1.647  135.369 1.044
+gamma[7]  -1.756   0.004 0.055 -1.862 -1.794 -1.757 -1.717 -1.650  197.382 1.017
+gamma[8]  -1.695   0.004 0.057 -1.801 -1.733 -1.697 -1.660 -1.573  197.517 1.014
+gamma[9]  -1.593   0.004 0.055 -1.706 -1.628 -1.593 -1.556 -1.488  193.413 1.002
+gamma[10] -1.383   0.004 0.056 -1.487 -1.424 -1.386 -1.345 -1.269  179.139 1.011
+gamma[11] -0.095   0.002 0.027 -0.149 -0.114 -0.096 -0.078 -0.041  188.801 1.011
+gamma[12]  0.846   0.002 0.028  0.788  0.828  0.846  0.866  0.901  189.027 1.018
+gamma[13] -0.736   0.003 0.039 -0.814 -0.763 -0.736 -0.709 -0.664  201.781 1.004
+gamma[14] -0.071   0.003 0.039 -0.148 -0.098 -0.071 -0.045  0.007  191.893 1.006
+gamma[15] -0.616   0.003 0.039 -0.692 -0.643 -0.618 -0.590 -0.540  231.148 1.004
+gamma[16]  0.069   0.002 0.025  0.022  0.052  0.068  0.085  0.120  274.584 1.001
+zi         0.232   0.001 0.010  0.213  0.226  0.232  0.239  0.252  312.185 1.006
+delta      0.045   0.001 0.014  0.026  0.035  0.042  0.051  0.080  704.356 1.003
+Stan model 'bhm-changepoint' does not contain samples.
 
+> #dev R 3.2.3; Rstan 2.8.2; RStudio 0.99.0467; Stan 2.8.0
+> #figures and tables for changepoint model
+> #Bryce Bartlett
+> #2/2016
+> 
+> 
+> rm(list=ls( .... [TRUNCATED] 
 
-Fit:
-Stan model 'bhm' does not contain samples.
-Stan model 'bhm' does not contain samples.
+> #@@@@@@
+> #Universals
+> #@@@@@@
+> 
+> #functions
+> source('funs.R')
+
+> #helper function for tables
+> eff = function(s,c){
++   # calculates mean effect from posterior sample and 95%CI
++   #
++   # Args:
++   #   s: a serie .... [TRUNCATED] 
+
+> #helper function for printing
+> printeff = function(s,c){
++   #returns string of the form "mean posterior [lower post,upper post]"
++   #Input: s = a .... [TRUNCATED] 
+
+> testlower = function(s){
++   #returns bayesian pvalue to test hypotheses that ICD10 RR are less than ICD9 RR
++   #Input: s = posterior samples, with .... [TRUNCATED] 
+
+> #calculate CI of difference in estimated effects
+> delta=function(s,c,p){
++   #returns distribution of the difference between ICD9 and ICD10 effects .... [TRUNCATED] 
+
+> rawdir = "H:/projects/mort1/dat~/"
+
+> outdir = "H:/projects/mort1/output/"
+
+> imdir = "H:/projects/mort1/img~/"
+
+> #@@@@
+> #Load and clean data
+> #@@@@
+> 
+> dat = read.csv(paste0(outdir,'stata-series.csv'))
+
+> model=list()
+
+> #load previously sved datasets from time_series_analysis2.R
+> for(m in 1:4){
++   load(file=paste0(outdir,paste0('m',m,'samp.gz')),verbose=T)
++   mod .... [TRUNCATED] 
+Loading objects:
+  samp
+Loading objects:
+  samp
+Loading objects:
+  samp
+Loading objects:
+  samp
+
+> #@@@@@@@@@@@@@@@@@@@
+> #Put together 2 tables of results
+> #@@@@@@@@@@@@@@@@@@@
+> 
+> gammanames = c(as.character(seq(40,85,by=5)),'Female','Complex' .... [TRUNCATED] 
+
+> #prepare yrrac model (models 1 and 2)
+> 
+> sink(paste0(outdir,'yrrac_regtable.txt'))
+
+> #prepare yrrdc model (models 3 and 4)
+> 
+> sink(paste0(outdir,'yrrdc_regtable.txt'))
+[1] 0.002025

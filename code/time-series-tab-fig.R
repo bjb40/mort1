@@ -306,7 +306,9 @@ ppd.yrrac.exp = t(exp(model[[2]]$ppd))
 ppd.yrrac = apply(ppd.yrrac.exp,2,FUN=function(x) x*dat$wt)
 #ppd.yrrac = cbind(t(exp(model[[2]]$ppd)),dat$wt); wtcol = ncol(tst.yrrac);
 #ppd.yrrac = apply(t(model[[2]]$ppd),2,FUN=function(x) x*dat$wt)
-  tst.m.yrrac = aggregate(ppd.yrrac,by=list(dat$Years),mean)
+  tst.m.yrrac = aggregate(ppd.yrrac.exp,by=list(dat$Years),mean)
+  plt.m.yrrac = apply(tst.m.yrrac[,2:ncol(ppd.yrrac)],1,eff)
+  
   tst.yrrac = aggregate(list(ppd.yrrac,dat$wt),by=list(dat$Years),sum)
   plt.yrrac = apply(tst.yrrac[,2:ncol(ppd.yrrac)],1,eff)
 
@@ -315,7 +317,7 @@ ppd.yrrdc = t(exp(model[[4]]$ppd))
   tst.yrrdc = aggregate(ppd.yrrdc,by=list(dat$Years[is.finite(dat$yrrdc)]),mean)
   plt.yrrdc = apply(tst.yrrdc[,2:ncol(tst.yrrdc)],1,eff)
 
-ob.mn.yrrac=aggregate(dat$yrrac,by=list(dat$Years),print)
+ob.m.yrrac=aggregate(exp(dat$yrrac),by=list(dat$Years),mean)
 
 ob.yrrac=aggregate(exp(dat$yrrac)*dat$wt,by=list(dat$Years),sum)
 ob.yrrdc=aggregate(exp(dat$yrrdc[is.finite(dat$yrrdc)]),by=list(dat$Years[is.finite(dat$yrrdc)]),mean)
@@ -325,18 +327,28 @@ ob.yrrdc=aggregate(exp(dat$yrrdc[is.finite(dat$yrrdc)]),by=list(dat$Years[is.fin
 #png(paste0(imdir,'series1.png'))  
 par(mfrow=c(1,1),mar=c(1,3,1,3))
 
-yl=range(c(ob.yrrac$x,plt.yrrac,ob.yrrdc$x,plt.yrrdc))
+yl=range(c(ob.yrrac$x,plt.m.yrrac,ob.m.yrrdc$x,plt.yrrdc))
 
 #yl=range(c(ob.yrrac$x,plt.yrrac))
-plot(1,type='n',ylim=yl,xlim=c(1,10),xaxt='n')
-     #,log="y")
+plot(1,type='n',ylim=yl,xlim=c(1,10),xaxt='n')#,log="y")
 #split icd9
+#polygon(c(1:5,rev(1:5)),
+#        c(plt.yrrac[2,1:5],rev(plt.yrrac[3,1:5])),
+#        border=NA, col=gray(0.9)
+#)
+
 polygon(c(1:5,rev(1:5)),
-        c(plt.yrrac[2,1:5],rev(plt.yrrac[3,1:5])),
+        c(plt.m.yrrac[2,1:5],rev(plt.m.yrrac[3,1:5])),
         border=NA, col=gray(0.9)
 )
-lines(1:5,plt.yrrac[1,1:5],type="l")
-lines(1:5,ob.yrrac$x[1:5],type="p",pch=10)
+
+
+#lines(1:5,plt.yrrac[1,1:5],type="l")
+#lines(1:5,ob.yrrac$x[1:5],type="p",pch=10)
+lines(1:5,plt.m.yrrac[1,1:5],type="l", lty=2)
+lines(1:5,ob.m.yrrac$x[1:5],type="p",pch=15)
+
+
 #icd10
 polygon(c(6:10,rev(6:10)),
         c(plt.yrrac[2,6:10],rev(plt.yrrac[3,6:10])),

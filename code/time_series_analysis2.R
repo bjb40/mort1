@@ -247,14 +247,14 @@ yrrac1 = stan("bhm.stan",
               thin=thin,
               verbose=T);
 
-samp = extract(yrrac1,pars=c('beta','gamma','zi','sig','loglik','dev','ppd'))
+samp = extract(yrrac1,pars=c('beta','gamma','zi','delta','sig','loglik','dev','ppd'))
 save(samp,file=paste0(outdir,'m1samp.gz'),compress=T)
 
 sink(paste0(outdir,'stan-m1.txt'))
 elapsed = get_elapsed_time(yrrac1)
 elapsed = max(rowSums(elapsed))/60 #minutes elapsed
 
-sum=summary(yrrac1,pars=c('beta','gamma','zi','sig'))
+sum=summary(yrrac1,pars=c('beta','gamma','zi','delta','sig'))
 cat('Seed:      \t\t\t',get_seed(yrrac1))
 cat('Rhat range:\t\t\t',round(range(summary(yrrac1)$summary[,'Rhat']),3))
 
@@ -277,7 +277,7 @@ sink()
 rm(yrrac1,samp)
 
 yrrac2 = stan("bhm-changepoint.stan", 
-              data=c('y','id','t','z','N','IDS','P','TDS','td'),
+              data=c('y','id','t','z','N','IDS','P','TDS','td','YRS','yrctr'),
               seed=1404399575,
               warmup=burn,
               thin=thin,
@@ -285,7 +285,7 @@ yrrac2 = stan("bhm-changepoint.stan",
               iter=iters,
               verbose=F);
 
-samp = extract(yrrac2,pars=c('beta','gamma','zi','sig','loglik','dev','ppd','L_Omega','mu_i'))
+samp = extract(yrrac2,pars=c('beta','gamma','zi','delta','sig','loglik','dev','ppd','L_Omega','mu_i','mu_t'))
 save(samp,file=paste0(outdir,'m2samp.gz'),compress=T)
 
 sink(paste0(outdir,'stan-output-m2.txt'))
@@ -293,7 +293,7 @@ sink(paste0(outdir,'stan-output-m2.txt'))
 elapsed = get_elapsed_time(yrrac2)
 elapsed = max(rowSums(elapsed))/60 #minutes elapsed
 
-sum=summary(yrrac2,pars=c('beta','gamma','sig','zi','L_Omega'))
+sum=summary(yrrac2,pars=c('beta','gamma','sig','delta','zi','L_Omega'))
 cat('Rhat range:\t\t\t',round(range(summary(yrrac2)$summary[,'Rhat']),3))
 
 cat('\nwWarmup:\t\t\t',burn)
@@ -328,14 +328,14 @@ TDS=length(unique(td))
 
 
 yrrdc1 = stan("bhm.stan", 
-              data=c('y','id','t','z','N','IDS','P'),
+              data=c('y','id','t','z','N','IDS','P','YRS','yrctr'),
               warmup=burn,
               seed=1404399575,
               chains=chains,
               iter=iters,
               verbose=F);
 
-samp = extract(yrrdc1,pars=c('beta','gamma','zi','sig','loglik','dev','ppd'))
+samp = extract(yrrdc1,pars=c('beta','gamma','zi','delta','sig','loglik','dev','ppd'))
 save(samp,file=paste0(outdir,'m3samp.gz'),compress=T)
 
 sink(paste0(outdir,'stan-output-m3.txt'))
@@ -343,7 +343,7 @@ sink(paste0(outdir,'stan-output-m3.txt'))
 elapsed = get_elapsed_time(yrrdc1)
 elapsed = max(rowSums(elapsed))/60 #minutes elapsed
 
-sum=summary(yrrdc1,pars=c('beta','gamma','zi','sig'))
+sum=summary(yrrdc1,pars=c('beta','gamma','zi','delta','sig'))
 cat('Rhat range:\t\t\t',round(range(summary(yrrdc1)$summary[,'Rhat']),3))
 cat('\nIterations:\t\t\t',iters)
 cat('\nElapsed min:\t\t\t',round(elapsed,3))
@@ -363,14 +363,14 @@ sink()
 rm(yrrdc1,samp)
 
 yrrdc2 = stan("bhm-changepoint.stan", 
-              data=c('y','id','t','z','N','IDS','P','TDS','td'),
+              data=c('y','id','t','z','N','IDS','P','TDS','td','YRS','yrctr'),
               seed=1404399575,
               warmup=burn,
               chains=chains,
               iter=iters,
               verbose=F);
 
-samp = extract(yrrdc2,pars=c('beta','gamma','zi','sig','loglik','dev','ppd','L_Omega','mu_i'))
+samp = extract(yrrdc2,pars=c('beta','gamma','zi','delta','sig','loglik','dev','ppd','L_Omega','mu_i','mu_t'))
 save(samp,file=paste0(outdir,'m4samp.gz'),compress=T)
 
 sink(paste0(outdir,'stan-output-m4.txt'))
@@ -378,7 +378,7 @@ sink(paste0(outdir,'stan-output-m4.txt'))
 elapsed = get_elapsed_time(yrrdc2)
 elapsed = max(rowSums(elapsed))/60 #minutes elapsed
 
-sum=summary(yrrdc2,pars=c('beta','gamma','zi','sig','L_Omega'))
+sum=summary(yrrdc2,pars=c('beta','gamma','zi','delta','sig','L_Omega'))
 cat('Rhat range:\t\t\t',round(range(summary(yrrdc2)$summary[,'Rhat']),3))
 
 cat('\nIterations:\t\t\t',iters)
