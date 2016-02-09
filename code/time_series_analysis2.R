@@ -190,7 +190,7 @@ rm(statadat,cells,cellsub,equals,i)
 #@@@@@@@@@@@@@@@@@@@
 #Run and Collect Models
 #@@@@@@@@@@@@@@@@@@@
-chains=4
+chains=3
   
 #load rstan
 library('rstan')
@@ -216,17 +216,20 @@ td = t #initialize
   td[t>=0] = 2 #icd10
 TDS=length(unique(td))
 
-iters=7500
-#iters = 5000
-#iters = 1000
+nu=5 #degrees of freedom for over-dispersed student t
 
-yrrac1 = stan("bhm.stan", data=c('y','id','t','z','N','IDS','P'),
+#iters=7500
+#iters = 5000
+#iters=2500
+iters = 1000
+
+yrrac1 = stan("bhm-t.stan", data=c('y','id','t','z','N','IDS','P','nu'),
                seed=1404399575,chains=chains,iter=iters,verbose=T);
 
 samp = extract(yrrac1,pars=c('beta','gamma','zi','sig','loglik','dev','ppd'))
 save(samp,file=paste0(outdir,'m1samp.gz'),compress=T)
 
-sink(paste0(outdir,'stan-m1.txt'))
+sink(paste0(outdir,'stan-m1t.txt'))
 elapsed = get_elapsed_time(yrrac1)
 elapsed = max(rowSums(elapsed))/60 #minutes elapsed
 
@@ -252,13 +255,13 @@ sink()
 
 rm(yrrac1,samp)
 
-yrrac2 = stan("bhm-changepoint.stan", data=c('y','id','t','z','N','IDS','P','TDS','td'),
+yrrac2 = stan("bhm-changepoint.stan", data=c('y','id','t','z','N','IDS','P','TDS','td','nu'),
               seed=1404399575,chains=chains,iter=iters,verbose=F);
 
 samp = extract(yrrac2,pars=c('beta','gamma','zi','sig','loglik','dev','ppd','L_Omega','mu_i'))
 save(samp,file=paste0(outdir,'m2samp.gz'),compress=T)
 
-sink(paste0(outdir,'stan-output-m2.txt'))
+sink(paste0(outdir,'stan-output-m2t.txt'))
 
 elapsed = get_elapsed_time(yrrac2)
 elapsed = max(rowSums(elapsed))/60 #minutes elapsed
