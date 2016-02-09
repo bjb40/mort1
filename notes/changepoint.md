@@ -25,6 +25,15 @@ y_{ct} \sim \begin{cases}
 \end{cases}
 $$
 
+Or, alternativley:
+
+$$
+y_{ct} = \begin{cases}
+   \alpha^{(c)}_1 + \beta_1 t + \sigma^2_1 \mbox{, if } t<0  \\
+   \alpha^{(c)}_2 + \beta_2 t + \sigma^2_2 \mbox{, if } t \geq 0   
+\end{cases}
+$$
+
 Level 2, Between Cell (Prior):
 
 $$
