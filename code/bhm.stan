@@ -31,8 +31,8 @@ transformed parameters {
     vector[IDS] mu_i; // age-specific conditonal effects
     vector[YRS] mu_t; // year-specific effects
     vector[N] yhat;
+    vector[YRS] that; 
     mu_i <- omega_i*zi;
-    mu_t <- omega_t*delta;
 
   for(n in 1:N){
     yhat[n] <- mu_i[id[n]] + mu_t[t[n] +yrctr] + t[n]*beta + z[n]*gamma;

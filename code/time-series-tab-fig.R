@@ -327,7 +327,7 @@ ob.yrrdc=aggregate(exp(dat$yrrdc[is.finite(dat$yrrdc)]),by=list(dat$Years[is.fin
 #png(paste0(imdir,'series1.png'))  
 par(mfrow=c(1,1),mar=c(1,3,1,3))
 
-yl=range(c(ob.yrrac$x,plt.m.yrrac,ob.m.yrrdc$x,plt.yrrdc))
+yl=range(c(ob.yrrac$x,plt.m.yrrac,ob.yrrdc$x,plt.yrrdc))
 
 #yl=range(c(ob.yrrac$x,plt.yrrac))
 plot(1,type='n',ylim=yl,xlim=c(1,10),xaxt='n')#,log="y")
