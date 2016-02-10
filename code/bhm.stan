@@ -24,18 +24,18 @@ parameters{
   real<lower=0> zi; //(scale for intercept)
   real<lower=0> delta; // variance for years
   vector[IDS] omega_i; //container for random normal draw to distribute cross-cell error
-  vector[YRS] omega_t; //container for random normal draw across year
+  vector[IDS] omega_t; //container for random normal draw across year
 }
 
 transformed parameters {
     vector[IDS] mu_i; // age-specific conditonal effects
-    vector[YRS] mu_t; // year-specific effects
+    vector[IDS] mu_t; // year-specific effects
     vector[N] yhat;
-    vector[YRS] that; 
     mu_i <- omega_i*zi;
+    mu_t <- beta + omega_t*delta;
 
   for(n in 1:N){
-    yhat[n] <- mu_i[id[n]] + mu_t[t[n] +yrctr] + t[n]*beta + z[n]*gamma;
+    yhat[n] <- mu_i[id[n]] + t[n]*mu_t[id[n]] + z[n]*gamma;
   }
 
 }
