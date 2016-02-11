@@ -81,8 +81,8 @@ imdir = "H:/projects/mort1/img~/"
 #@@@@
 
 dat = read.csv(paste0(outdir,'stata-series.csv'))
-model=list()
 
+model=list()
 #load previously sved datasets from time_series_analysis2.R
 for(m in 1:4){
   load(file=paste0(outdir,paste0('m',m,'samp.gz')),verbose=T)
@@ -289,39 +289,66 @@ dev.off()
 #time series plot with ppd
 #@@@@@@@@@@@
 
+#calculate weight matrix by year
+
+tdeaths = aggregate(dat$tdeaths,by=list(dat$Years),sum)
+
+dat$wt=as.numeric(NA)
+for(y in unique(dat$Years)){
+  print(y)
+  dat$wt[dat$Years==y] = dat$tdeaths[dat$Years==y]/tdeaths$x[tdeaths$Group.1 == y]
+  }
+
 #summarize posterior draws
 #can take off exponentials, maybe
 
-ppd.yrrac = t(exp(model[[2]]$ppd))
-#ppd.yrrac = t(model[[2]]$ppd)
-  tst.yrrac = aggregate(ppd.yrrac,by=list(dat$Years),mean)
-  plt.yrrac = apply(tst.yrrac[,2:10000],1,eff)
+ppd.yrrac.exp = t(exp(model[[2]]$ppd))
+ppd.yrrac = apply(ppd.yrrac.exp,2,FUN=function(x) x*dat$wt)
+#ppd.yrrac = cbind(t(exp(model[[2]]$ppd)),dat$wt); wtcol = ncol(tst.yrrac);
+#ppd.yrrac = apply(t(model[[2]]$ppd),2,FUN=function(x) x*dat$wt)
+  tst.m.yrrac = aggregate(ppd.yrrac.exp,by=list(dat$Years),mean)
+  plt.m.yrrac = apply(tst.m.yrrac[,2:ncol(ppd.yrrac)],1,eff)
+  
+  tst.yrrac = aggregate(list(ppd.yrrac,dat$wt),by=list(dat$Years),sum)
+  plt.yrrac = apply(tst.yrrac[,2:ncol(ppd.yrrac)],1,eff)
 
 ppd.yrrdc = t(exp(model[[4]]$ppd))
 #ppd.yrrdc = t(model[[4]]$ppd)
   tst.yrrdc = aggregate(ppd.yrrdc,by=list(dat$Years[is.finite(dat$yrrdc)]),mean)
-  plt.yrrdc = apply(tst.yrrdc[,2:10000],1,eff)
-  
-ob.yrrac=aggregate(exp(dat$yrrac),by=list(dat$Years),mean)
+  plt.yrrdc = apply(tst.yrrdc[,2:ncol(tst.yrrdc)],1,eff)
+
+ob.m.yrrac=aggregate(exp(dat$yrrac),by=list(dat$Years),mean)
+
+ob.yrrac=aggregate(exp(dat$yrrac)*dat$wt,by=list(dat$Years),sum)
 ob.yrrdc=aggregate(exp(dat$yrrdc[is.finite(dat$yrrdc)]),by=list(dat$Years[is.finite(dat$yrrdc)]),mean)
 #ob.yrrac=aggregate(dat$yrrac,by=list(dat$Years),mean)
 #ob.yrrdc=aggregate(dat$yrrdc[is.finite(dat$yrrdc)],by=list(dat$Years[is.finite(dat$yrrdc)]),mean)
   
-png(paste0(imdir,'series.png'))  
+#png(paste0(imdir,'series1.png'))  
 par(mfrow=c(1,1),mar=c(1,3,1,3))
 
-yl=range(c(ob.yrrac$x,plt.yrrac,ob.yrrdc$x,plt.yrrdc))
+yl=range(c(ob.yrrac$x,plt.m.yrrac,ob.yrrdc$x,plt.yrrdc))
 
 #yl=range(c(ob.yrrac$x,plt.yrrac))
-plot(1,type='n',ylim=yl,xlim=c(1,10),xaxt='n')
-     #,log="y")
+plot(1,type='n',ylim=yl,xlim=c(1,10),xaxt='n')#,log="y")
 #split icd9
+#polygon(c(1:5,rev(1:5)),
+#        c(plt.yrrac[2,1:5],rev(plt.yrrac[3,1:5])),
+#        border=NA, col=gray(0.9)
+#)
+
 polygon(c(1:5,rev(1:5)),
-        c(plt.yrrac[2,1:5],rev(plt.yrrac[3,1:5])),
+        c(plt.m.yrrac[2,1:5],rev(plt.m.yrrac[3,1:5])),
         border=NA, col=gray(0.9)
 )
-lines(1:5,plt.yrrac[1,1:5],type="l")
-lines(1:5,ob.yrrac$x[1:5],type="p",pch=10)
+
+
+#lines(1:5,plt.yrrac[1,1:5],type="l")
+#lines(1:5,ob.yrrac$x[1:5],type="p",pch=10)
+lines(1:5,plt.m.yrrac[1,1:5],type="l", lty=2)
+lines(1:5,ob.m.yrrac$x[1:5],type="p",pch=15)
+
+
 #icd10
 polygon(c(6:10,rev(6:10)),
         c(plt.yrrac[2,6:10],rev(plt.yrrac[3,6:10])),
@@ -356,4 +383,8 @@ axis(1,at=1:10,labels=1994:2003)
 T=axTicks(2) #get axis ticks from left side
 #plot logged rate
 axis(4,at=T,labels=rnd(log(T),2))
-dev.off()
+#dev.off()
+
+
+#distrubution of cell effects
+#mu_i = model[[2]]$mu_i
