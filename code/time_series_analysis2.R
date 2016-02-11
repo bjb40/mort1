@@ -238,6 +238,15 @@ TDS=length(unique(td))
 YRS=length(unique(t))
 yrctr = 6 #number to recenter to start at value of 1 for indexing
 
+dnames = c('y','id','t','z','N','IDS','P','td','TDS','YRS','yrctr')
+bayesdat = lapply(dname,get)
+names(bayesdat) = dname
+save(bayesdat,file=paste0(outdir,'bayesdat.RData'))
+rm(dnames,bayesdat)
+
+#save object as list
+baysdat = lapply()
+
 yrrac1 = stan("bhm.stan", 
               data=c('y','id','t','z','N','IDS','P','YRS','yrctr'),
               seed=1404399575,

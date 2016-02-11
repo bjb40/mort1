@@ -288,6 +288,53 @@ axis(3,at=tick,labels=rnd(exp(tick),2))
 
 dev.off()
 
+###############
+###############
+#delta ppd draw (across two levels) - BDA III, p. 118 
+###############
+###############
+
+#load data as saved to 
+load(paste0(outdir,'bayesdat.RData'))
+
+#copy structure -- need to draw a random year variable,
+#and extend through the entire set of periods (based on a1 and a2)
+
+
+makeppt=function(m){
+  #m is model number - 2 or 4
+  #returns a list of ppts including implied icd9 and icd10
+  
+  #make container the size of ppt without periods 
+  #(to cover both icd9 and icd10)
+  ppt = list(model[[m]]$ppd,model[[m]]$ppd)
+  names(ppt) = c('icd9','icd10')
+
+  #iterate through posterior
+  for(iter in 1:nrow(ppt[[1]])){
+  
+  #collect previously drawn mu_i's
+  mu_i = cbind(1:bayesdat$IDS,model[[m]]$mu_i[iter,1,])
+  ieff=cbind(bayesdat$id,NA)
+  for(i in 1:nrow(mu_i)){
+    ieff[ieff[,1]==i,2] = mu_i[i,2]
+  }
+    
+  #calculate E(y) (using only gammas and alpha(drawn from mu))
+  yhat = bayesdat$z %*% model[[m]]$gamma[iter,1,] + ieff[,2];
+  
+  ##draw tilde{delta}, tilde{y}
+  yr=range(bayesdat$t)
+  mu_t = cbind(yr[1]:yr[2],rnorm(10,mean=model[[m]]$beta[iter,1],sd=model[[m]]$delta[iter]^2))
+  teff = cbind(bayesdat$t,NA)
+  for(t in 1:nrow(mu_t)){
+    teff[teff[,1]==mu_t[t,1],2] = mu_t[t,2]
+  }
+  
+  ppt[[1]][iter,] = rnorm(yhat+teff[,1]*teff[,2],model[[m]]$sig[iter,1]^2)
+  }
+}
+
 #@@@@@@@@@@@
 #time series plot with ppd
 #@@@@@@@@@@@
