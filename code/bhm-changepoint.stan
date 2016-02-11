@@ -22,22 +22,24 @@ parameters{
   #individual level
   vector[2] beta; // grand mean coefficients for intercept and slope
   matrix[TDS,P] gamma; //
-  real<lower=0> sig;//l1 error; BDA3 388 - uniform gelman 2006; stan manual 66
-  real<lower=0> zi1; //(scale for intercept)
-  //real<lower=0> sig2;//l1 error; BDA3 388 - uniform gelman 2006; stan manual 66
-  real<lower=0> zi2; //(scale for intercept)
-
+  vector<lower=0>[2] sig;//l1 error; BDA3 388 - uniform gelman 2006; stan manual 66
+  vector<lower=0>[TDS] zi; // scale for correlation matrix
+  cholesky_factor_corr[2] L_Omega; //faster for programming; correlation matrix
   matrix[TDS,IDS] omega_i; //container for random normal draw to distribute cross-cell error
 }
 
 transformed parameters {
     matrix[TDS,IDS] mu_i; // age-specific conditonal effects
     vector[N] yhat;
-    mu_i[1] <- omega_i[1]*zi1;
-    mu_i[2] <- omega_i[2]*zi2;
+    vector[N] sigma; #container for 2 level 1 variances
+    mu_i <- diag_matrix(zi)*L_Omega*omega_i;
+
+    
 
   for(n in 1:N){
     yhat[n] <- mu_i[td[n],id[n]] + t[n]*beta[td[n]] + z[n]*gamma[td[n]]';
+    
+    sigma[n] <- sig[td[n]];
   }
 
 }
@@ -46,18 +48,15 @@ model{
 
   to_vector(omega_i) ~ normal(0,1);
 
-  y ~ normal(yhat,sig);
+  y ~ normal(yhat,sigma);
   
   //prior
   beta ~ normal(0,5);
-  to_vector(gamma[1]) ~ normal(0,5);
-  to_vector(gamma[2]) ~ normal(gamma[2],5);
-  
+  to_vector(gamma) ~ normal(0,5);
   sig ~ normal(0,5);
+  zi ~ cauchy(0,5);
+  L_Omega ~ lkj_corr_cholesky(1); //1 is equiv to uniform prior; >1 diagonal <1 high
 
-  zi1 ~ cauchy(0,5);
-  zi2 ~ cauchy(0,5);
-  
 }
 
 // see DIC in stan's google mailing list for discussion, BDA3, pp.172-179
@@ -69,11 +68,14 @@ generated quantities {
   real dev;
   //FOR PPD
   vector[N] ppd;
+  matrix[2,2] Omega; //covariance matrix
+  
+  Omega <- L_Omega*L_Omega';
 
   dev <- 0;  
   for(n in 1:N){
-    loglik[n] <- (normal_log(y[n],yhat[n],sig));
-    dev <- dev-(2*normal_log(y[n],yhat[n],sig));
-    ppd[n] <- normal_rng(yhat[n],sig);
+    loglik[n] <- (normal_log(y[n],yhat[n],sigma[n]));
+    dev <- dev-(2*normal_log(y[n],yhat[n],sigma[n]));
+    ppd[n] <- normal_rng(yhat[n],sigma[n]);
   }
 }
