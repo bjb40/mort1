@@ -191,6 +191,16 @@ rm(statadat,cells,cellsub,equals,i)
 #Run and Collect Models
 #@@@@@@@@@@@@@@@@@@@
 chains=4
+
+#iters=7500
+#iters = 5000
+iters=2500
+#iters = 1000
+
+thin=1
+
+burn=iters/2
+
   
 #load rstan
 library('rstan')
@@ -216,12 +226,13 @@ td = t #initialize
   td[t>=0] = 2 #icd10
 TDS=length(unique(td))
 
-iters=7500
-#iters = 5000
-#iters = 1000
-
 yrrac1 = stan("bhm.stan", data=c('y','id','t','z','N','IDS','P'),
-               seed=1404399575,chains=chains,iter=iters,verbose=T);
+              seed=1404399575,
+              chains=chains,
+              iter=iters,
+              thin=thin,
+              warmup=burn,
+              verbose=T);
 
 samp = extract(yrrac1,pars=c('beta','gamma','zi','sig','loglik','dev','ppd'))
 save(samp,file=paste0(outdir,'m1samp.gz'),compress=T)
@@ -253,7 +264,12 @@ sink()
 rm(yrrac1,samp)
 
 yrrac2 = stan("bhm-changepoint.stan", data=c('y','id','t','z','N','IDS','P','TDS','td'),
-              seed=1404399575,chains=chains,iter=iters,verbose=F);
+              seed=1404399575,
+              chains=chains,
+              iter=iters,
+              thin=thin,
+              warmup=burn,
+              verbose=F);
 
 samp = extract(yrrac2,pars=c('beta','gamma','zi','sig','loglik','dev','ppd','L_Omega','mu_i'))
 save(samp,file=paste0(outdir,'m2samp.gz'),compress=T)
@@ -297,7 +313,12 @@ TDS=length(unique(td))
 
 
 yrrdc1 = stan("bhm.stan", data=c('y','id','t','z','N','IDS','P'),
-              seed=1404399575,chains=chains,iter=iters,verbose=F);
+              seed=1404399575,
+              chains=chains,
+              iter=iters,
+              thin=thin,
+              warmup=burn,
+              verbose=F);
 
 samp = extract(yrrdc1,pars=c('beta','gamma','zi','sig','loglik','dev','ppd'))
 save(samp,file=paste0(outdir,'m3samp.gz'),compress=T)
@@ -327,7 +348,12 @@ sink()
 rm(yrrdc1,samp)
 
 yrrdc2 = stan("bhm-changepoint.stan", data=c('y','id','t','z','N','IDS','P','TDS','td'),
-              seed=1404399575,chains=chains,iter=iters,verbose=F);
+              seed=1404399575,
+              chains=chains,
+              iter=iters,
+              warmup=burn,
+              thin=thin,
+              verbose=F);
 
 samp = extract(yrrdc2,pars=c('beta','gamma','zi','sig','loglik','dev','ppd','L_Omega','mu_i'))
 save(samp,file=paste0(outdir,'m4samp.gz'),compress=T)
