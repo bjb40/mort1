@@ -200,8 +200,8 @@ rm(statadat,cells,cellsub,equals,i)
 #@@@@@@@@@@@@@@@@@@@
 chains=3
 
-#iters = 1000
-iters = 2500 
+iters = 1000
+#iters = 2500 
 #iters = 5000
 #iters = 7500
 #iters=10000

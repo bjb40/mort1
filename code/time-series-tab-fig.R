@@ -344,7 +344,11 @@ ob.yrrdc=aggregate(exp(dat$yrrdc[lim])*dat$wt[lim],by=list(dat$Years[lim]),sum)
 png(paste0(imdir,'logscale-series1.png'))  
 par(mfrow=c(1,1),mar=c(3,3,3,3))
 
+<<<<<<< HEAD
 yl=range(c(ob.m.yrrac$x,plt.m.yrrac,ob.m.yrrdc$x,plt.m.yrrdc))
+=======
+yl=range(c(ob.yrrac$x,plt.m.yrrac,ob.yrrdc$x,plt.yrrdc))
+>>>>>>> 21e54786198c70a39a4075c3d6eed9601fe61923
 
 #yl=range(c(ob.yrrac$x,plt.yrrac))
 plot(1,type='n',ylim=yl,xlim=c(1,10),xaxt='n',log="y")
