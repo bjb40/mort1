@@ -33,9 +33,10 @@ transformed parameters {
     vector[N] yhat;
     vector[YRS] that; 
     mu_i <- omega_i*zi;
+    mu_t <- omega_t*delta;
 
   for(n in 1:N){
-    yhat[n] <- mu_i[id[n]] + mu_t[t[n] +yrctr] + t[n]*beta + z[n]*gamma;
+    yhat[n] <- mu_i[id[n]] + t[n]*mu_t[t[n] +yrctr] + t[n]*beta + z[n]*gamma;
   }
 
 }
@@ -54,7 +55,7 @@ model{
   sig ~ normal(0,5);
 
   zi ~ cauchy(0,5);
-  delta ~ cauchy(0,5);
+  delta ~ cauchy(0,15);
   
 }
 

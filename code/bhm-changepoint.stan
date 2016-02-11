@@ -41,7 +41,7 @@ transformed parameters {
     mu_t <- delta*omega_t;
 
   for(n in 1:N){
-    yhat[n] <- mu_i[td[n],id[n]] + mu_t[t[n]+yrctr] + t[n]*beta[td[n]] + z[n]*gamma[td[n]]';
+    yhat[n] <- mu_i[td[n],id[n]] + t[n]*mu_t[t[n]+yrctr] + t[n]*beta[td[n]] + z[n]*gamma[td[n]]';
     
     sigma[n] <- sig[td[n]];
   }
@@ -60,7 +60,7 @@ model{
   to_vector(gamma) ~ normal(0,5);
   sig ~ normal(0,5);
   zi ~ cauchy(0,5);
-  delta ~ cauchy(0,5);
+  delta ~ cauchy(0,15);
   L_Omega ~ lkj_corr_cholesky(1); //1 is equiv to uniform prior; >1 diagonal <1 high
 
 }

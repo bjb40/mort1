@@ -198,10 +198,10 @@ rm(statadat,cells,cellsub,equals,i)
 #@@@@@@@@@@@@@@@@@@@
 #Run and Collect Models
 #@@@@@@@@@@@@@@@@@@@
-chains=3
+chains=4
 
-iters = 1000
-#iters = 2500 
+#iters = 1000
+iters = 2500 
 #iters = 5000
 #iters = 7500
 #iters=10000
@@ -226,7 +226,7 @@ options(mc.cores = chains) #leave one core free for work
 y=yrrac
 id=x1[,'cell']
 t=x1[,'Years']
-z=as.matrix(x1[,!colnames(x1) %in% c('yrrac','yrrdc','Years','cell','Intercept','x')])
+z=as.matrix(x1[,!colnames(x1) %in% c('yrrac','yrrdc','Years','cell','Intercept','x','X','tdeaths')])
 #z=z[,1:9]
 N=length(y)
 IDS=length(unique(id))
