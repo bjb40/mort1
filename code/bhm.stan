@@ -37,7 +37,6 @@ transformed parameters {
 model{
 
   to_vector(omega_i) ~ normal(0,1);
-
   
     y ~ normal(yhat,sig);
   
