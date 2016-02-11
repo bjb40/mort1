@@ -26,22 +26,21 @@ parameters{
   matrix[TDS,P] gamma; //
   real<lower=0> sig;//l1 error; BDA3 388 - uniform gelman 2006; stan manual 66
   vector<lower=0>[TDS] zi; // scale for correlation matrix
-  vector<lower=0>[TDS] delta; //scale for year-specific errors
+  real<lower=0> delta; //scale for year-specific errors
   cholesky_factor_corr[2] L_Omega; //faster for programming; correlation matrix
   matrix[TDS,IDS] omega_i; //container for random normal draw to distribute cross-cell error
-  matrix[TDS,YRS] omega_t; //container for random normal draw to distribut cross-year error
+  vector[YRS] omega_t; //container for random normal draw to distribut cross-year error
 }
 
 transformed parameters {
     matrix[TDS,IDS] mu_i; // age-specific conditonal effects
-    matrix[TDS,YRS] mu_t; // year-specific conditional effects
+    vector[YRS] mu_t; // year-specific conditional effects
     vector[N] yhat;
     mu_i <- diag_matrix(zi)*L_Omega*omega_i;
-    mu_t[1] <- delta[1]*omega_t[1];
-    mu_t[2] <- delta[2]*omega_t[2];
+    mu_t <- delta*omega_t;
 
 for(n in 1:N){
-    yhat[n] <- mu_i[td[n],id[n]] + mu_t[td[n],t[n]+yrctr] + t[n]*beta[td[n]] + z[n]*gamma[td[n]]';
+    yhat[n] <- mu_i[td[n],id[n]] + t[n]*mu_t[t[n]+yrctr] + t[n]*beta[td[n]] + z[n]*gamma[td[n]]';
   }
   
 }

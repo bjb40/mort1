@@ -1,106 +1,58 @@
-Seed:      			 1404399575Rhat range:			 0.999 1.044
-Iterations:			 2500
-Elapsed min:			 9.646
-Iters/minute:			 259.184
-n_eff (samp):			 127.9 3750
-n_eff/minutes:			 13.26 388.776
+Seed:      			 1404399575Rhat range:			 0.998 400.69
+Iterations:			 1000
+Elapsed min:			 63.843
+Iters/minute:			 15.663
+n_eff (samp):			 2.002 2000
+n_eff/minutes:			 0.031 31.327
 
 Parms:
-            mean se_mean    sd   2.5%    25%    50%    75%  97.5%    n_eff  Rhat
-beta      -0.025   0.000 0.005 -0.036 -0.029 -0.025 -0.022 -0.015  698.980 1.003
-gamma[1]  -0.769   0.005 0.059 -0.882 -0.810 -0.770 -0.728 -0.653  135.123 1.025
-gamma[2]  -1.104   0.005 0.061 -1.226 -1.147 -1.102 -1.061 -0.989  127.900 1.019
-gamma[3]  -1.409   0.004 0.058 -1.514 -1.449 -1.412 -1.372 -1.284  197.700 1.009
-gamma[4]  -1.607   0.004 0.056 -1.712 -1.645 -1.607 -1.571 -1.492  157.209 1.021
-gamma[5]  -1.730   0.004 0.057 -1.837 -1.770 -1.730 -1.692 -1.621  183.481 1.003
-gamma[6]  -1.767   0.005 0.057 -1.877 -1.806 -1.768 -1.730 -1.647  135.369 1.044
-gamma[7]  -1.756   0.004 0.055 -1.862 -1.794 -1.757 -1.717 -1.650  197.382 1.017
-gamma[8]  -1.695   0.004 0.057 -1.801 -1.733 -1.697 -1.660 -1.573  197.517 1.014
-gamma[9]  -1.593   0.004 0.055 -1.706 -1.628 -1.593 -1.556 -1.488  193.413 1.002
-gamma[10] -1.383   0.004 0.056 -1.487 -1.424 -1.386 -1.345 -1.269  179.139 1.011
-gamma[11] -0.095   0.002 0.027 -0.149 -0.114 -0.096 -0.078 -0.041  188.801 1.011
-gamma[12]  0.846   0.002 0.028  0.788  0.828  0.846  0.866  0.901  189.027 1.018
-gamma[13] -0.736   0.003 0.039 -0.814 -0.763 -0.736 -0.709 -0.664  201.781 1.004
-gamma[14] -0.071   0.003 0.039 -0.148 -0.098 -0.071 -0.045  0.007  191.893 1.006
-gamma[15] -0.616   0.003 0.039 -0.692 -0.643 -0.618 -0.590 -0.540  231.148 1.004
-gamma[16]  0.069   0.002 0.025  0.022  0.052  0.068  0.085  0.120  274.584 1.001
-zi         0.232   0.001 0.010  0.213  0.226  0.232  0.239  0.252  312.185 1.006
-delta      0.045   0.001 0.014  0.026  0.035  0.042  0.051  0.080  704.356 1.003
-Stan model 'bhm-changepoint' does not contain samples.
+            mean se_mean    sd   2.5%    25%    50%    75%  97.5%  n_eff   Rhat
+beta      -0.024   0.001 0.002 -0.028 -0.025 -0.024 -0.022 -0.019 12.016  1.254
+gamma[1]  -0.001   0.000 0.000 -0.001 -0.001 -0.001  0.000  0.000  2.044 10.885
+gamma[2]   0.000   0.000 0.000  0.000  0.000  0.000  0.000  0.000  5.292  1.667
+gamma[3]  -0.773   0.035 0.073 -0.832 -0.824 -0.796 -0.754 -0.534  4.243  2.073
+gamma[4]  -0.866   0.067 0.100 -1.003 -0.942 -0.922 -0.740 -0.707  2.277  4.510
+gamma[5]  -1.018   0.074 0.125 -1.179 -1.116 -1.024 -0.982 -0.673  2.861  2.536
+gamma[6]  -0.866   0.253 0.359 -1.228 -1.138 -0.996 -0.736 -0.258  2.007 22.340
+gamma[7]  -0.864   0.179 0.255 -1.223 -1.042 -0.857 -0.754 -0.486  2.030  9.939
+gamma[8]  -0.642   0.298 0.422 -1.090 -0.865 -0.781 -0.531  0.082  2.011 16.456
+gamma[9]  -0.397   0.367 0.520 -0.960 -0.745 -0.567 -0.217  0.463  2.009 21.142
+gamma[10] -0.079   0.469 0.665 -0.774 -0.564 -0.310  0.143  1.035  2.011 20.420
+gamma[11]  0.193   0.475 0.674 -0.531 -0.325 -0.011  0.436  1.298  2.014 18.123
+gamma[12]  0.612   0.536 0.763 -0.205 -0.062  0.381  0.723  1.886  2.027 12.094
+gamma[13] -0.107   0.027 0.049 -0.269 -0.117 -0.097 -0.074 -0.050  3.304  2.831
+gamma[14]  0.963   0.044 0.064  0.879  0.920  0.939  0.977  1.073  2.130  5.646
+gamma[15] -0.675   0.020 0.045 -0.806 -0.692 -0.667 -0.643 -0.607  4.957  2.005
+gamma[16] -0.041   0.023 0.054 -0.179 -0.053 -0.042 -0.017  0.068  5.760  1.748
+gamma[17] -0.514   0.022 0.052 -0.670 -0.538 -0.502 -0.484 -0.421  5.756  1.942
+gamma[18]  0.110   0.021 0.036  0.017  0.092  0.109  0.134  0.157  2.951  2.474
+zi         0.007   0.003 0.004  0.001  0.005  0.008  0.010  0.016  2.323  2.550
+delta      0.006   0.004 0.006  0.000  0.002  0.004  0.008  0.024  3.049  2.736
+sig        0.277   0.018 0.030  0.251  0.258  0.262  0.308  0.318  2.670  2.203
 
-> #dev R 3.2.3; Rstan 2.8.2; RStudio 0.99.0467; Stan 2.8.0
-> #figures and tables for changepoint model
-> #Bryce Bartlett
-> #2/2016
-> 
-> 
-> rm(list=ls( .... [TRUNCATED] 
 
-> #@@@@@@
-> #Universals
-> #@@@@@@
-> 
-> #functions
-> source('funs.R')
+Fit:
+$dic
+[1] 147127.8
 
-> #helper function for tables
-> eff = function(s,c){
-+   # calculates mean effect from posterior sample and 95%CI
-+   #
-+   # Args:
-+   #   s: a serie .... [TRUNCATED] 
+$elpd_dic
+[1] -73563.92
 
-> #helper function for printing
-> printeff = function(s,c){
-+   #returns string of the form "mean posterior [lower post,upper post]"
-+   #Input: s = a .... [TRUNCATED] 
+$logdev
+[1] 762.9585
 
-> testlower = function(s){
-+   #returns bayesian pvalue to test hypotheses that ICD10 RR are less than ICD9 RR
-+   #Input: s = posterior samples, with .... [TRUNCATED] 
+$pdic
+[1] 146364.9
 
-> #calculate CI of difference in estimated effects
-> delta=function(s,c,p){
-+   #returns distribution of the difference between ICD9 and ICD10 effects .... [TRUNCATED] 
+$waic
+[1] 1033.256
 
-> rawdir = "H:/projects/mort1/dat~/"
+$p_waic
+[1] 275.9226
 
-> outdir = "H:/projects/mort1/output/"
+$lppd
+[1] -240.7052
 
-> imdir = "H:/projects/mort1/img~/"
+$p_waic_1
+[1] 281.5481
 
-> #@@@@
-> #Load and clean data
-> #@@@@
-> 
-> dat = read.csv(paste0(outdir,'stata-series.csv'))
-
-> model=list()
-
-> #load previously sved datasets from time_series_analysis2.R
-> for(m in 1:4){
-+   load(file=paste0(outdir,paste0('m',m,'samp.gz')),verbose=T)
-+   mod .... [TRUNCATED] 
-Loading objects:
-  samp
-Loading objects:
-  samp
-Loading objects:
-  samp
-Loading objects:
-  samp
-
-> #@@@@@@@@@@@@@@@@@@@
-> #Put together 2 tables of results
-> #@@@@@@@@@@@@@@@@@@@
-> 
-> gammanames = c(as.character(seq(40,85,by=5)),'Female','Complex' .... [TRUNCATED] 
-
-> #prepare yrrac model (models 1 and 2)
-> 
-> sink(paste0(outdir,'yrrac_regtable.txt'))
-
-> #prepare yrrdc model (models 3 and 4)
-> 
-> sink(paste0(outdir,'yrrdc_regtable.txt'))
-[1] 0.002025

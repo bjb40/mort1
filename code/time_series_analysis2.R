@@ -198,10 +198,10 @@ rm(statadat,cells,cellsub,equals,i)
 #@@@@@@@@@@@@@@@@@@@
 #Run and Collect Models
 #@@@@@@@@@@@@@@@@@@@
-chains=3
+chains=4
 
 #iters = 1000
-iters = 2500 
+iters = 1000
 #iters = 5000
 #iters = 7500
 #iters=10000
@@ -247,7 +247,7 @@ yrrac1 = stan("bhm.stan",
               thin=thin,
               verbose=T);
 
-samp = extract(yrrac1,pars=c('beta','gamma','zi','delta','sig','loglik','dev','ppd'))
+samp = extract(yrrac1,pars=c('beta','gamma','zi','delta','sig','loglik','dev'))
 save(samp,file=paste0(outdir,'m1samp.gz'),compress=T)
 
 sink(paste0(outdir,'stan-m1.txt'))
@@ -285,7 +285,7 @@ yrrac2 = stan("bhm-changepoint.stan",
               iter=iters,
               verbose=F);
 
-samp = extract(yrrac2,pars=c('beta','gamma','zi','delta','sig','loglik','dev','ppd','L_Omega','mu_i','mu_t'))
+samp = extract(yrrac2,pars=c('beta','gamma','zi','delta','sig','loglik','dev','L_Omega','mu_i','mu_t'))
 save(samp,file=paste0(outdir,'m2samp.gz'),compress=T)
 
 sink(paste0(outdir,'stan-output-m2.txt'))
@@ -335,7 +335,7 @@ yrrdc1 = stan("bhm.stan",
               iter=iters,
               verbose=F);
 
-samp = extract(yrrdc1,pars=c('beta','gamma','zi','delta','sig','loglik','dev','ppd'))
+samp = extract(yrrdc1,pars=c('beta','gamma','zi','delta','sig','loglik','dev'))
 save(samp,file=paste0(outdir,'m3samp.gz'),compress=T)
 
 sink(paste0(outdir,'stan-output-m3.txt'))
@@ -370,7 +370,7 @@ yrrdc2 = stan("bhm-changepoint.stan",
               iter=iters,
               verbose=F);
 
-samp = extract(yrrdc2,pars=c('beta','gamma','zi','delta','sig','loglik','dev','ppd','L_Omega','mu_i','mu_t'))
+samp = extract(yrrdc2,pars=c('beta','gamma','zi','delta','sig','loglik','dev','L_Omega','mu_i','mu_t'))
 save(samp,file=paste0(outdir,'m4samp.gz'),compress=T)
 
 sink(paste0(outdir,'stan-output-m4.txt'))

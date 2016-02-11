@@ -32,10 +32,10 @@ transformed parameters {
     vector[YRS] mu_t; // year-specific effects
     vector[N] yhat;
     mu_i <- omega_i*zi;
-    mu_t <- omega_t*delta;
+    mu_t <- beta + omega_t*delta;
 
   for(n in 1:N){
-    yhat[n] <- mu_i[id[n]] + mu_t[t[n] +yrctr] + t[n]*beta + z[n]*gamma;
+    yhat[n] <- mu_i[id[n]] + t[n]*mu_t[t[n] +yrctr] + z[n]*gamma;
   }
 
 }
