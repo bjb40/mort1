@@ -88,7 +88,7 @@ table(raw$ager,raw$agegroup)
 ids = c('ICD10','year','female','race','pd','complex','agegroup')
 pool=aggregate(raw[,c('uc_c_Sum','uc_n_Sum','any_c_Sum','any_n_Sum')], by=raw[,ids],sum)
 
-#create weight matrix
+#create weight matrix -- WRONG WEIGHTS -- WOULD NEED POPULATION WEIGHTS, NOT DEATH WEIGHTS
 ndeaths=cbind(raw[,ids],apply(raw[,c('uc_c_Sum','uc_n_Sum','uc_a_Sum','uc_u_Sum')],1,sum))
 ndeaths=aggregate(ndeaths[,length(ndeaths)],by=ndeaths[,ids],sum)
 colnames(ndeaths)[length(ndeaths)] = 'tdeaths'
@@ -239,13 +239,13 @@ YRS=length(unique(t))
 yrctr = 6 #number to recenter to start at value of 1 for indexing
 
 dnames = c('y','id','t','z','N','IDS','P','td','TDS','YRS','yrctr')
-bayesdat = lapply(dname,get)
-names(bayesdat) = dname
-save(bayesdat,file=paste0(outdir,'bayesdat.RData'))
-rm(dnames,bayesdat)
 
-#save object as list
-baysdat = lapply()
+#save data used for yrrdc models
+yrracdat = lapply(dnames,get)
+names(yrracdat) = dnames
+save(yrracdat,file=paste0(outdir,'yrracdat.RData'))
+rm(yrracdat)
+
 
 yrrac1 = stan("bhm.stan", 
               data=c('y','id','t','z','N','IDS','P','YRS','yrctr'),
@@ -334,6 +334,12 @@ N=length(y)
 P=ncol(z)
 IDS=length(unique(id))
 TDS=length(unique(td))
+
+#save data used for yrrdc models
+yrrdcdat = lapply(dnames,get)
+names(yrrdcdat) = dnames
+save(yrrdcdat,file=paste0(outdir,'yrrdcdat.RData'))
+rm(yrrdcdat)
 
 
 yrrdc1 = stan("bhm.stan", 

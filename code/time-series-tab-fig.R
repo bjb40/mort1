@@ -470,14 +470,20 @@ dev.off()
 ###############
 
 #load data as saved to 
-load(paste0(outdir,'bayesdat.RData'))
-bayesdat$t = dat$Years
+load(paste0(outdir,'yrracdat.RData'))
+load(paste0(outdir,'yrrdcdat.RData'))
+
+#reassign "t" to dat$year -- it gets lost for some reason (probably dynamic assignment in code)
+yrracdat$t = dat$Years
+yrrdcdat$t = dat$Years[is.finite(dat$yrrdc)]
 
 #copy structure -- need to draw a random year variable,
 #and extend through the entire set of periods (based on a1 and a2)
 
-makeppt=function(m){
+makeppt=function(m,dat){
   #m is model number - 2 or 4
+  # dat is a design matrix of data in a list in the same form as the stan model
+  # dat is saved from the analysis set up
   #returns a list of ppts including implied icd9 and icd10
   
   #make container the size of ppt without periods 
@@ -491,17 +497,17 @@ makeppt=function(m){
     if(iter%%500==0){cat('Coding',iter,'of',nrow(ppt[[1]]),'\n')}
     
     #collect previously drawn mu_i's
-    mu_i.9=cbind(1:bayesdat$IDS,model[[m]]$mu_i[iter,1,])
-    mu_i.10=cbind(1:bayesdat$IDS,model[[m]]$mu_i[iter,2,])
-    ieff.9=ieff.10=cbind(bayesdat$id,NA)
+    mu_i.9=cbind(1:dat$IDS,model[[m]]$mu_i[iter,1,])
+    mu_i.10=cbind(1:dat$IDS,model[[m]]$mu_i[iter,2,])
+    ieff.9=ieff.10=cbind(dat$id,NA)
     for(i in 1:nrow(mu_i.9)){
       ieff.9[ieff.9[,1]==i,2] = mu_i.9[i,2]
       ieff.10[ieff.10[,1]==i,2] = mu_i.10[i,2]
     }
     
     #calculate E(y) (using only gammas and alpha(drawn from mu))
-    yhat.9 = bayesdat$z %*% model[[m]]$gamma[iter,1,] + ieff.9[,2];
-    yhat.10 = bayesdat$z %*% model[[m]]$gamma[iter,2,] + ieff.10[,2];
+    yhat.9 = dat$z %*% model[[m]]$gamma[iter,1,] + ieff.9[,2];
+    yhat.10 = dat$z %*% model[[m]]$gamma[iter,2,] + ieff.10[,2];
     
     if(iter%%1000==0){
       cat('yhat (mean,min,max)\n')
@@ -510,17 +516,17 @@ makeppt=function(m){
     }
     
     ##draw tilde{delta}, tilde{y}
-    yr=range(bayesdat$t)
+    yr=range(dat$t)
     mu_t.9 = cbind(yr[1]:yr[2],rnorm(10,mean=0,sd=model[[m]]$delta[iter]))
     mu_t.10 = cbind(yr[1]:yr[2],rnorm(10,mean=0,sd=model[[m]]$delta[iter]))
-    teff.9 = teff.10 = cbind(bayesdat$t,NA)
+    teff.9 = teff.10 = cbind(dat$t,NA)
     for(t in 1:nrow(mu_t.9)){
       teff.9[teff.9[,1]==mu_t.9[t,1],2] = mu_t.9[t,2]
       teff.10[teff.10[,1]==mu_t.10[t,1],2] = mu_t.10[t,2]
     }
 
-    newhat.9 = yhat.9+model[[m]]$beta[iter,1]*bayesdat$t+teff.9[,2]*bayesdat$t
-    newhat.10 = yhat.10+model[[m]]$beta[iter,2]*bayesdat$t+teff.10[,2]*bayesdat$t
+    newhat.9 = yhat.9+model[[m]]$beta[iter,1]*dat$t+teff.9[,2]*dat$t
+    newhat.10 = yhat.10+model[[m]]$beta[iter,2]*dat$t+teff.10[,2]*dat$t
 
     if(iter%%1000==0){
       cat('new yhat (mean,min,max)\n')
@@ -545,48 +551,56 @@ makeppt=function(m){
   
 }
 
-ppt.yrrac = makeppt(2)
-#ppt.yrrdc = makeppt(4)
+ppt.yrrac = makeppt(m=2,dat=yrracdat)
+ppt.yrrdc = makeppt(m=4,dat=yrrdcdat)
 
 #generate exponentiated ppdt
 
 yrrac.exp = lapply(ppt.yrrac,FUN=function(x) t(exp(x)))
-yrrac.log = lapply(ppt.yrrac,FUN=function(x) t(x))
-#yrrac.wt = apply(ppd.yrrac.exp,2,FUN=function(x) x*dat$wt)
-yrrac.m = lapply(yrrac.log, FUN= function(x)
-          aggregate(x,by=list(dat$Years),mean))
+yrrac.m = lapply(yrrac.exp, FUN= function(x)
+          aggregate(x,by=list(yrracdat$t),mean))
 yrrac.plt = lapply(yrrac.m,FUN=function(x)
           apply(x[,2:ncol(x)],1,eff))
 
-ob.yrrac.log=aggregate(dat$yrrac,by=list(dat$Years),mean)
+yrrdc.exp = lapply(ppt.yrrdc,FUN=function(x) t(exp(x)))
+yrrdc.m = lapply(yrrdc.exp, FUN= function(x)
+  aggregate(x,by=list(yrrdcdat$t),mean))
+yrrdc.plt = lapply(yrrdc.m,FUN=function(x)
+  apply(x[,2:ncol(x)],1,eff))
 
 
 #@@@@@@@@@@@@@@@@@@@@@@@
 #unweighted ppd plot
 #@@@@@@@@@@@@@@@@@@@@@@
 
-#png(paste0(imdir,'logscale-series1.png'))  
+png(paste0(imdir,'series2.png'))  
 par(mfrow=c(1,1),mar=c(3,3,3,3))
 
 
-yl=range(c(ob.yrrac.log$x,yrrac.plt))
+yl=range(c(ob.m.yrrac$x,yrrac.plt,yrrdc.plt,ob.m.yrrdc$x))
 
 #yl=range(c(ob.yrrac$x,plt.yrrac))
-plot(1,type='n',ylim=yl,xlim=c(1,10),xaxt='n')
-
-#polygon(c(1:10,rev(1:10)),
-#        c(plt.m.yrrac[2,1:10],rev(plt.m.yrrac[3,1:10])),
-#        border=NA, col=gray(0.9)
-#)
+plot(1,type='n',ylim=yl,xlim=c(1,10),xaxt='n')#,log='y')
 
 polygon(c(1:10,rev(1:10)),
         c(yrrac.plt$icd9[2,1:10],rev(yrrac.plt$icd9[3,1:10])),
-        border=NA, col=gray(0.9)
+        border=NA, col=gray(0.9,alpha=.25)
 )
 
 polygon(c(1:10,rev(1:10)),
         c(yrrac.plt$icd10[2,1:10],rev(yrrac.plt$icd10[3,1:10])),
-        border=NA, col=gray(0.9)
+        border=NA, col=gray(0.9,alpha=.25)
+)
+
+
+polygon(c(1:10,rev(1:10)),
+        c(yrrdc.plt$icd9[2,1:10],rev(yrrdc.plt$icd9[3,1:10])),
+        border=NA, col=gray(0.9,alpha=.25)
+)
+
+polygon(c(1:10,rev(1:10)),
+        c(yrrdc.plt$icd10[2,1:10],rev(yrrdc.plt$icd10[3,1:10])),
+        border=NA, col=gray(0.9,alpha=.25)
 )
 
 
@@ -594,5 +608,82 @@ polygon(c(1:10,rev(1:10)),
 lines(1:10,yrrac.plt$icd9[1,],type='l',lty=2)
 lines(1:10,yrrac.plt$icd10[1,],type='l',lty=3)
 
-lines(1:10,ob.yrrac.log$x[1:10],type="p",pch=15)
+lines(1:10,yrrdc.plt$icd9[1,],type='l',lty=2)
+lines(1:10,yrrdc.plt$icd10[1,],type='l',lty=3)
 
+
+lines(1:10,ob.m.yrrac$x[1:10],type="p",pch=15)
+lines(1:10,ob.m.yrrdc$x[1:10],type='p',pch=16)
+
+abline(v=5.5)
+
+dev.off()
+
+########
+#age standardized plot---
+#no good (need individual year changes)
+#wrong weights -- would need population
+########
+
+#age standardized by weighting according to 1999
+wt = dat$tdeaths[dat$Years==0]/sum(dat$tdeaths[dat$Years==0])
+#calculate weighted mean
+yrrac.wtm = lapply(yrrac.exp, FUN= function(x)
+  aggregate(x,by=list(dat$Years),FUN=function(y) sum(y*wt)))
+yrrac.wtplt = lapply(yrrac.wtm,FUN=function(x)
+  apply(x[,2:ncol(x)],1,eff))
+
+yrrdc.wtm = lapply(yrrdc.exp,FUN=function(x)
+  aggregate(x,by=list(yrrdcdat$t),FUN=function(y) sum(y*wt)))
+yrrdc.wtplt = lapply(yrrdc.wtm,FUN=function(x)
+  apply(x[,2:ncol(x)],1,eff))
+
+ob.wtyrrac=aggregate(exp(dat$yrrac),by=list(dat$Years),FUN=
+          function(x) sum(x*wt))
+
+ob.wtyrrdc=aggregate(exp(dat$yrrdc),by=list(dat$Years),FUN=
+                       function(x) sum(x*wt))
+
+png(paste0(imdir,'wt-series2.png'))  
+par(mfrow=c(1,1),mar=c(3,3,3,3))
+
+
+yl=range(c(ob.wtyrrac$x,yrrac.wtplt,ob.wtyrrdc$x,yrrdc.wtplt))
+
+#yl=range(c(ob.yrrac$x,plt.yrrac))
+plot(1,type='n',ylim=yl,xlim=c(1,10),xaxt='n')#,log='y')
+
+polygon(c(1:10,rev(1:10)),
+        c(yrrac.wtplt$icd9[2,1:10],rev(yrrac.wtplt$icd9[3,1:10])),
+        border=NA, col=gray(0.9,alpha=.25)
+)
+
+polygon(c(1:10,rev(1:10)),
+        c(yrrac.wtplt$icd10[2,1:10],rev(yrrac.wtplt$icd10[3,1:10])),
+        border=NA, col=gray(0.9,alpha=.25)
+)
+
+
+polygon(c(1:10,rev(1:10)),
+        c(yrrdc.wtplt$icd9[2,1:10],rev(yrrdc.wtplt$icd9[3,1:10])),
+        border=NA, col=gray(0.9,alpha=.25)
+)
+
+polygon(c(1:10,rev(1:10)),
+        c(yrrdc.wtplt$icd10[2,1:10],rev(yrrdc.wtplt$icd10[3,1:10])),
+        border=NA, col=gray(0.9,alpha=.25)
+)
+
+
+#lines(1:10,plt.m.yrrac[1,1:10],type="l", lty=1)
+lines(1:10,yrrac.wtplt$icd9[1,],type='l',lty=2)
+lines(1:10,yrrac.wtplt$icd10[1,],type='l',lty=3)
+
+lines(1:10,yrrdc.wtplt$icd9[1,],type='l',lty=2)
+lines(1:10,yrrdc.wtplt$icd10[1,],type='l',lty=3)
+
+
+lines(1:10,ob.wtyrrac$x[1:10],type="p",pch=15)
+lines(1:10,ob.wtyrrdc$x[1:10],type="p",pch=16)
+
+dev.off()

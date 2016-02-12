@@ -20,17 +20,8 @@ Level 1, Within Cell (Likelihood):
 
 $$
 y_{ct} \sim \begin{cases}
-   N(\alpha^{(c)}_1 + \beta_1 t, \sigma^2_1) \mbox{, if } t<0  \\
-   N(\alpha^{(c)}_2 + \beta_2 t, \sigma^2_2) \mbox{, if } t \geq 0   
-\end{cases}
-$$
-
-Or, alternativley:
-
-$$
-y_{ct} = \begin{cases}
-   \alpha^{(c)}_1 + \beta_1 t + \sigma^2_1 \mbox{, if } t<0  \\
-   \alpha^{(c)}_2 + \beta_2 t + \sigma^2_2 \mbox{, if } t \geq 0   
+   N(\alpha^{(c)}_1 + \tau^{(t)}_1 t, \sigma^2_1) \mbox{, if } t<0  \\
+   N(\alpha^{(c)}_2 + \tau^{(t)}_2 t, \sigma^2_2) \mbox{, if } t \geq 0   
 \end{cases}
 $$
 
@@ -52,7 +43,17 @@ $$
 Keep the above in the model; put the below in a technical supplement.
 
 $$
-\beta \sim N(0,5)
+\begin{align}
+\begin{bmatrix}
+  \tau_1 \\  \tau_2 
+\end{bmatrix}
+\sim \text{MVN} \Big(
+\begin{bmatrix}
+ \beta_1 \\ \beta_2 
+\end{bmatrix}
+, Diag(\delta) 
+\Big)
+\end{align}
 $$
 
 **note that LKJ is described on pp. 582 and 576 of BDAIII. And p. 437 includes a comment on the half-cauchy**     
@@ -63,6 +64,7 @@ $$
 \begin{aligned}
 & \gamma \sim \text{N}(0,5) \\ 
 & \sigma \sim N(0,5) \\
+& \delta \sim \text{Half-Cauchy}(15) \\
 & \mathbf{\Sigma} = Diag(\xi) \mathbf{\Omega} Diag(\xi) \\
 & \text{where  } 
 \begin{align}
