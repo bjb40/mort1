@@ -288,53 +288,6 @@ axis(3,at=tick,labels=rnd(exp(tick),2))
 
 dev.off()
 
-###############
-###############
-#delta ppd draw (across two levels) - BDA III, p. 118 
-###############
-###############
-
-#load data as saved to 
-load(paste0(outdir,'bayesdat.RData'))
-
-#copy structure -- need to draw a random year variable,
-#and extend through the entire set of periods (based on a1 and a2)
-
-
-makeppt=function(m){
-  #m is model number - 2 or 4
-  #returns a list of ppts including implied icd9 and icd10
-  
-  #make container the size of ppt without periods 
-  #(to cover both icd9 and icd10)
-  ppt = list(model[[m]]$ppd,model[[m]]$ppd)
-  names(ppt) = c('icd9','icd10')
-
-  #iterate through posterior
-  for(iter in 1:nrow(ppt[[1]])){
-  
-  #collect previously drawn mu_i's
-  mu_i = cbind(1:bayesdat$IDS,model[[m]]$mu_i[iter,1,])
-  ieff=cbind(bayesdat$id,NA)
-  for(i in 1:nrow(mu_i)){
-    ieff[ieff[,1]==i,2] = mu_i[i,2]
-  }
-    
-  #calculate E(y) (using only gammas and alpha(drawn from mu))
-  yhat = bayesdat$z %*% model[[m]]$gamma[iter,1,] + ieff[,2];
-  
-  ##draw tilde{delta}, tilde{y}
-  yr=range(bayesdat$t)
-  mu_t = cbind(yr[1]:yr[2],rnorm(10,mean=model[[m]]$beta[iter,1],sd=model[[m]]$delta[iter]^2))
-  teff = cbind(bayesdat$t,NA)
-  for(t in 1:nrow(mu_t)){
-    teff[teff[,1]==mu_t[t,1],2] = mu_t[t,2]
-  }
-  
-  ppt[[1]][iter,] = rnorm(yhat+teff[,1]*teff[,2],model[[m]]$sig[iter,1]^2)
-  }
-}
-
 #@@@@@@@@@@@
 #time series plot with ppd
 #@@@@@@@@@@@
@@ -501,3 +454,145 @@ dev.off()
 
 #distrubution of cell effects
 #mu_i = model[[2]]$mu_i
+
+
+
+
+
+
+
+
+
+###############
+###############
+#delta ppd draw (across two levels) - BDA III, p. 118 
+###############
+###############
+
+#load data as saved to 
+load(paste0(outdir,'bayesdat.RData'))
+bayesdat$t = dat$Years
+
+#copy structure -- need to draw a random year variable,
+#and extend through the entire set of periods (based on a1 and a2)
+
+makeppt=function(m){
+  #m is model number - 2 or 4
+  #returns a list of ppts including implied icd9 and icd10
+  
+  #make container the size of ppt without periods 
+  #(to cover both icd9 and icd10)
+  ppt = list(model[[m]]$ppd,model[[m]]$ppd)
+  names(ppt) = c('icd9','icd10')
+  
+  #iterate through posterior
+  for(iter in 1:nrow(ppt[[1]])){
+    
+    if(iter%%500==0){cat('Coding',iter,'of',nrow(ppt[[1]]),'\n')}
+    
+    #collect previously drawn mu_i's
+    mu_i.9=cbind(1:bayesdat$IDS,model[[m]]$mu_i[iter,1,])
+    mu_i.10=cbind(1:bayesdat$IDS,model[[m]]$mu_i[iter,2,])
+    ieff.9=ieff.10=cbind(bayesdat$id,NA)
+    for(i in 1:nrow(mu_i.9)){
+      ieff.9[ieff.9[,1]==i,2] = mu_i.9[i,2]
+      ieff.10[ieff.10[,1]==i,2] = mu_i.10[i,2]
+    }
+    
+    #calculate E(y) (using only gammas and alpha(drawn from mu))
+    yhat.9 = bayesdat$z %*% model[[m]]$gamma[iter,1,] + ieff.9[,2];
+    yhat.10 = bayesdat$z %*% model[[m]]$gamma[iter,2,] + ieff.10[,2];
+    
+    if(iter%%1000==0){
+      cat('yhat (mean,min,max)\n')
+      print(c(mean(yhat.9),range(yhat.9)))
+      print(c(mean(yhat.10),range(yhat.10)))
+    }
+    
+    ##draw tilde{delta}, tilde{y}
+    yr=range(bayesdat$t)
+    mu_t.9 = cbind(yr[1]:yr[2],rnorm(10,mean=0,sd=model[[m]]$delta[iter]))
+    mu_t.10 = cbind(yr[1]:yr[2],rnorm(10,mean=0,sd=model[[m]]$delta[iter]))
+    teff.9 = teff.10 = cbind(bayesdat$t,NA)
+    for(t in 1:nrow(mu_t.9)){
+      teff.9[teff.9[,1]==mu_t.9[t,1],2] = mu_t.9[t,2]
+      teff.10[teff.10[,1]==mu_t.10[t,1],2] = mu_t.10[t,2]
+    }
+
+    newhat.9 = yhat.9+model[[m]]$beta[iter,1]*bayesdat$t+teff.9[,2]*bayesdat$t
+    newhat.10 = yhat.10+model[[m]]$beta[iter,2]*bayesdat$t+teff.10[,2]*bayesdat$t
+
+    if(iter%%1000==0){
+      cat('new yhat (mean,min,max)\n')
+      print(c(mean(newhat.9),range(newhat.9)))
+      print(c(mean(newhat.10),range(newhat.10)))
+    }
+    
+    n=ncol(ppt[[1]])    
+    ppt[[1]][iter,] = rnorm(n,mean=newhat.9,sd=model[[m]]$sig[iter,1])
+    ppt[[2]][iter,] = rnorm(n,mean=newhat.10,sd=model[[m]]$sig[iter,2])
+    
+    if(iter%%1000==0){
+      cat('tilde{y} (mean,min,max)\n')
+      print(c(mean(ppt[[1]]),range(ppt[[1]])))
+      print(c(mean(ppt[[2]]),range(ppt[[2]])))
+    }
+    
+    
+  }
+  
+  return(ppt)
+  
+}
+
+ppt.yrrac = makeppt(2)
+#ppt.yrrdc = makeppt(4)
+
+#generate exponentiated ppdt
+
+yrrac.exp = lapply(ppt.yrrac,FUN=function(x) t(exp(x)))
+yrrac.log = lapply(ppt.yrrac,FUN=function(x) t(x))
+#yrrac.wt = apply(ppd.yrrac.exp,2,FUN=function(x) x*dat$wt)
+yrrac.m = lapply(yrrac.log, FUN= function(x)
+          aggregate(x,by=list(dat$Years),mean))
+yrrac.plt = lapply(yrrac.m,FUN=function(x)
+          apply(x[,2:ncol(x)],1,eff))
+
+ob.yrrac.log=aggregate(dat$yrrac,by=list(dat$Years),mean)
+
+
+#@@@@@@@@@@@@@@@@@@@@@@@
+#unweighted ppd plot
+#@@@@@@@@@@@@@@@@@@@@@@
+
+#png(paste0(imdir,'logscale-series1.png'))  
+par(mfrow=c(1,1),mar=c(3,3,3,3))
+
+
+yl=range(c(ob.yrrac.log$x,yrrac.plt))
+
+#yl=range(c(ob.yrrac$x,plt.yrrac))
+plot(1,type='n',ylim=yl,xlim=c(1,10),xaxt='n')
+
+#polygon(c(1:10,rev(1:10)),
+#        c(plt.m.yrrac[2,1:10],rev(plt.m.yrrac[3,1:10])),
+#        border=NA, col=gray(0.9)
+#)
+
+polygon(c(1:10,rev(1:10)),
+        c(yrrac.plt$icd9[2,1:10],rev(yrrac.plt$icd9[3,1:10])),
+        border=NA, col=gray(0.9)
+)
+
+polygon(c(1:10,rev(1:10)),
+        c(yrrac.plt$icd10[2,1:10],rev(yrrac.plt$icd10[3,1:10])),
+        border=NA, col=gray(0.9)
+)
+
+
+#lines(1:10,plt.m.yrrac[1,1:10],type="l", lty=1)
+lines(1:10,yrrac.plt$icd9[1,],type='l',lty=2)
+lines(1:10,yrrac.plt$icd10[1,],type='l',lty=3)
+
+lines(1:10,ob.yrrac.log$x[1:10],type="p",pch=15)
+

@@ -1,37 +1,11 @@
 
-> cat('\n\nTable __. Bayesian regression estimates on logged Relative Rate
-+     of Acute to Chronic all-cause deaths 1994-2003.\n\n')
-
 
 Table __. Bayesian regression estimates on logged Relative Rate
     of Acute to Chronic all-cause deaths 1994-2003.
 
-
-> #need to check with scott on the "pvalue" test, and read is simulation articles... 
-> #need to integrate uncertainty in measure out of this, probabl .... [TRUNCATED] 
 |      |  Model 1 | Model 2-ICD9 | Model 2-ICD10 | M2: ICD10-ICD9 |
-
-> cat('|:-----|---------:|-------------:|--------------:|--------------------------------:|\n')
 |:-----|---------:|-------------:|--------------:|--------------------------------:|
-
-> #year effect - Beta
-> cat('| Year | ')
-| Year | 
-> cat(printeff(model[[1]]$beta), '|')
--0.034<br>[-0.069,-0.003] |
-> cat(printeff(model[[2]]$beta[,1]), '|')
--0.021<br>[-0.032,-0.010] |
-> cat(printeff(model[[2]]$beta[,2]), '|')
-0.002<br>[-0.006,0.010] |
-> #bayesian pvalue ICD10 effect < ICD9 effect
-> cat(delta(model[[2]]$beta,p=T),'|\n')
-0.023<br>[0.010,0.038] |
-
-> #conditional means of effects - gammas
-> for(e in 1:16){
-+   cat('|',gammanames[e],'|')
-+   cat(printeff(model[[1]]$gamma[,e]), '|')
-+   #model 2 is .... [TRUNCATED] 
+| Year | -0.034<br>[-0.069,-0.003] |-0.021<br>[-0.032,-0.010] |0.002<br>[-0.006,0.010] |0.023<br>[0.010,0.038] |
 | 40 |-0.839<br>[-0.945,-0.734] |-0.705<br>[-0.814,-0.595] |-0.868<br>[-0.979,-0.758] |-0.163<br>[-0.211,-0.112] |
 | 45 |-1.165<br>[-1.267,-1.064] |-1.087<br>[-1.196,-0.979] |-1.147<br>[-1.255,-1.037] |-0.060<br>[-0.109,-0.012] |
 | 50 |-1.480<br>[-1.584,-1.369] |-1.417<br>[-1.526,-1.306] |-1.434<br>[-1.545,-1.322] |-0.017<br>[-0.065,0.031] |
@@ -48,39 +22,8 @@ Table __. Bayesian regression estimates on logged Relative Rate
 | Ltcare |-0.064<br>[-0.139,0.009] |-0.014<br>[-0.090,0.057] |-0.120<br>[-0.196,-0.047] |-0.105<br>[-0.135,-0.076] |
 | Oplace |-0.613<br>[-0.682,-0.541] |-0.606<br>[-0.680,-0.533] |-0.625<br>[-0.703,-0.551] |-0.020<br>[-0.050,0.010] |
 | Black |0.066<br>[0.017,0.121] |0.055<br>[0.003,0.108] |0.081<br>[0.028,0.134] |0.026<br>[0.006,0.046] |
-
-> #variances
-> 
-> ####need to confirm terminology -- am I getting standard deviations or variances?
-> 
-> cat('| Level 2 Var |')
-| Level 2 Var |
-> cat(printeff(model[[1]]$zi),'|')
-0.232<br>[0.215,0.251] |
-> cat(printeff(model[[2]]$zi[,1]), '|')
-0.230<br>[0.212,0.250] |
-> cat(printeff(model[[2]]$zi[,2]), '|')
-0.239<br>[0.221,0.260] |
-> cat(delta(model[[2]]$zi,p=T),'|\n')
-0.010<br>[-0.001,0.021] |
-
-> cat('| Correlation of Level 2 Var |   -   |    |')
-| Correlation of Level 2 Var |   -   |    |
-> #calculated from L_Omega which is the lower cholesky of the correlation matrix
-> # so it is L_Omega %*% t(L_Omega) on the upper or lower diagonal
->  .... [TRUNCATED] 
-
-> cat(printeff(corr), '| -  |\n')
-0.958<br>[0.942,0.972] | -  |
-
-> cat('| Level 1 Var |')
-| Level 1 Var |
-> cat(printeff(model[[1]]$sig),'|')
-0.119<br>[0.116,0.123] |
-> cat(printeff(model[[2]]$sig), '|   |  - |')
-0.105<br>[0.095,0.116] |   |  - |
-> cat('\n\nNote: Mean estimates with 95% CI; fit can be input from model summaries')
-
+| Level 2 Var |0.232<br>[0.215,0.251] |0.230<br>[0.212,0.250] |0.239<br>[0.221,0.260] |0.010<br>[-0.001,0.021] |
+| Correlation of Level 2 Var |   -   |    |0.958<br>[0.942,0.972] | -  |
+| Level 1 Var |0.119<br>[0.116,0.123] |0.105<br>[0.095,0.116] |   |  - |
 
 Note: Mean estimates with 95% CI; fit can be input from model summaries
-> sink()
