@@ -366,7 +366,7 @@ lines(1:5,ob.m.yrrac$x[1:5],type="p",pch=15)
 #icd10
 polygon(c(6:10,rev(6:10)),
         c(plt.m.yrrac[2,6:10],rev(plt.m.yrrac[3,6:10])),
-        border=NA, col=gray(0.9)
+        border=NA, col=gray(0.75)
 )
 lines(6:10,plt.m.yrrac[1,6:10],type="l",lty=2)
 lines(6:10,ob.m.yrrac$x[6:10],type="p",pch=15)
@@ -375,7 +375,7 @@ abline(v=5.5)
 
 polygon(c(1:5,rev(1:5)),
         c(plt.m.yrrdc[2,1:5],rev(plt.m.yrrdc[3,1:5])),
-        border=NA, col=gray(0.9)
+        border=NA, col=gray(0.75)
 )
 lines(1:5,plt.m.yrrdc[1,1:5],type="l",lty=2)
 lines(1:5,ob.m.yrrdc$x[1:5],type="p",pch=16)
@@ -423,7 +423,7 @@ lines(1:5,ob.yrrac$x[1:5],type="p",pch=15)
 #icd10
 polygon(c(6:10,rev(6:10)),
         c(plt.yrrac[2,6:10],rev(plt.yrrac[3,6:10])),
-        border=NA, col=gray(0.9)
+        border=NA, col=gray(0.75)
 )
 lines(6:10,plt.yrrac[1,6:10],type="l",lty=2)
 lines(6:10,ob.yrrac$x[6:10],type="p",pch=15)
@@ -432,7 +432,7 @@ abline(v=5.5)
 
 polygon(c(1:5,rev(1:5)),
         c(plt.yrrdc[2,1:5],rev(plt.yrrdc[3,1:5])),
-        border=NA, col=gray(0.9)
+        border=NA, col=gray(0.75)
 )
 lines(1:5,plt.yrrdc[1,1:5],type="l",lty=2)
 lines(1:5,ob.yrrdc$x[1:5],type="p",pch=16)
@@ -440,7 +440,7 @@ lines(1:5,ob.yrrdc$x[1:5],type="p",pch=16)
 #icd10
 polygon(c(6:10,rev(6:10)),
         c(plt.yrrdc[2,6:10],rev(plt.yrrdc[3,6:10])),
-        border=NA, col=gray(0.9)
+        border=NA, col=gray(0.75)
 )
 lines(6:10,plt.yrrdc[1,6:10],type="l",lty=2)
 lines(6:10,ob.yrrdc$x[6:10],type="p",pch=16)
@@ -584,23 +584,23 @@ plot(1,type='n',ylim=yl,xlim=c(1,10),xaxt='n')#,log='y')
 
 polygon(c(1:10,rev(1:10)),
         c(yrrac.plt$icd9[2,1:10],rev(yrrac.plt$icd9[3,1:10])),
-        border=NA, col=gray(0.9,alpha=.25)
+        border=NA, col=gray(0.75,alpha=.25)
 )
 
 polygon(c(1:10,rev(1:10)),
         c(yrrac.plt$icd10[2,1:10],rev(yrrac.plt$icd10[3,1:10])),
-        border=NA, col=gray(0.9,alpha=.25)
+        border=NA, col=gray(0.75,alpha=.25)
 )
 
 
 polygon(c(1:10,rev(1:10)),
         c(yrrdc.plt$icd9[2,1:10],rev(yrrdc.plt$icd9[3,1:10])),
-        border=NA, col=gray(0.9,alpha=.25)
+        border=NA, col=gray(0.75,alpha=.25)
 )
 
 polygon(c(1:10,rev(1:10)),
         c(yrrdc.plt$icd10[2,1:10],rev(yrrdc.plt$icd10[3,1:10])),
-        border=NA, col=gray(0.9,alpha=.25)
+        border=NA, col=gray(0.75,alpha=.25)
 )
 
 
@@ -655,23 +655,23 @@ plot(1,type='n',ylim=yl,xlim=c(1,10),xaxt='n')#,log='y')
 
 polygon(c(1:10,rev(1:10)),
         c(yrrac.wtplt$icd9[2,1:10],rev(yrrac.wtplt$icd9[3,1:10])),
-        border=NA, col=gray(0.9,alpha=.25)
+        border=NA, col=gray(0.75,alpha=.25)
 )
 
 polygon(c(1:10,rev(1:10)),
         c(yrrac.wtplt$icd10[2,1:10],rev(yrrac.wtplt$icd10[3,1:10])),
-        border=NA, col=gray(0.9,alpha=.25)
+        border=NA, col=gray(0.75,alpha=.25)
 )
 
 
 polygon(c(1:10,rev(1:10)),
         c(yrrdc.wtplt$icd9[2,1:10],rev(yrrdc.wtplt$icd9[3,1:10])),
-        border=NA, col=gray(0.9,alpha=.25)
+        border=NA, col=gray(0.75,alpha=.25)
 )
 
 polygon(c(1:10,rev(1:10)),
         c(yrrdc.wtplt$icd10[2,1:10],rev(yrrdc.wtplt$icd10[3,1:10])),
-        border=NA, col=gray(0.9,alpha=.25)
+        border=NA, col=gray(0.75,alpha=.25)
 )
 
 
