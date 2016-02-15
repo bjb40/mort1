@@ -19,18 +19,18 @@ eff = function(s,c){
   #
   # Args:
   #   s: a series of posterior samples
-  #   c: a number betwen 0 and 1 for confidence; .95 is default 
+  #   c: a number betwen 0 and 1 for confidence; .95 is default
   #
   # Returns:
   #   a named vector including mean, lower ci, upper ci
-  
+
   e = mean(s)
   names(e)='mean'
   #calculate probs
   if(missing(c)){c=.95}
   l=(1-c)/2
   u=1-((1-c)/2)
-  
+
   interval = quantile(s,prob=c(l,u))
   return(c(e,interval))
 }
@@ -52,9 +52,9 @@ testlower = function(s){
   #Input: s = posterior samples, with column1 from ICD9 and column 2 from ICD10
   #output is a single number
   #not strictly correct; need a yrep or maybe \tilde(rep)
-  
+
   return(sum(apply(s,1,FUN=function(x) x[2]<x[1]))/nrow(s))
-  
+
 }
 
 #calculate CI of difference in estimated effects
@@ -65,7 +65,7 @@ delta=function(s,c,p){
   #input: p is True or false for printing
   #output is a vecotr of 3 values, mean, and CI
   #not strictly correct; need a yrep or maybe \tilde(rep)
-  
+
   d = apply(s,1,FUN=function(x) x[2]-x[1])
   if(missing(p)){p=F}
   if(p==F){return(eff(d,c))}
@@ -104,7 +104,7 @@ cat('\n\nTable __. Bayesian regression estimates on logged Relative Rate
     of Acute to Chronic all-cause deaths 1994-2003.\n\n')
 
 
-#need to check with scott on the "pvalue" test, and read is simulation articles... 
+#need to check with scott on the "pvalue" test, and read is simulation articles...
 #need to integrate uncertainty in measure out of this, probably to get a a \tilde(y)
 
 cat('|      |  Model 1 | Model 2-ICD9 | Model 2-ICD10 | M2: ICD10-ICD9 |\n')
@@ -127,7 +127,7 @@ for(e in 1:16){
   cat(printeff(model[[2]]$gamma[,1,e]), '|')
   cat(printeff(model[[2]]$gamma[,2,e]), '|')
   cat(delta(model[[2]]$gamma[,,e],p=T),'|\n')
-  
+
 }
 
 #variances
@@ -166,7 +166,7 @@ cat('\n\nTable __. Bayesian regression estimates on logged Relative Rate
     of Acute to Chronic underlying-cause deaths 1994-2003.\n\n')
 
 
-#need to check with scott on the "pvalue" test, and read is simulation articles... 
+#need to check with scott on the "pvalue" test, and read is simulation articles...
 #need to integrate uncertainty in measure out of this, probably to get a a \tilde(y)
 
 cat('|      |  Model 3 | Model 4-ICD9 | Model 4-ICD10 | M4: ICD10-ICD9 |\n')
@@ -189,7 +189,7 @@ for(e in 1:16){
   cat(printeff(model[[4]]$gamma[,1,e]), '|')
   cat(printeff(model[[4]]$gamma[,2,e]), '|')
   cat(delta(model[[4]]$gamma[,,e],p=T),'|\n')
-  
+
 }
 
 #variances
@@ -233,23 +233,23 @@ ageplot = function(mod){
     #complex = matrix(0,2,2)
     yrrac9 = apply(model[[mod]]$gamma[,1,1:10],2,FUN=function(x) eff(exp(x), c=.84))
     yrrac10 = apply(model[[mod]]$gamma[,2,1:10],2,FUN=function(x) eff(exp(x), c=.84))
-    
+
     #yl=range(c(yrrac9,yrrac10))
     #print(yl)
     yl=c(0.05,1)
-    
+
     plot(1,type='n',ylim=yl,xlim=c(1,10),log='y')
     o = 0 #offset for visibility
-    
+
     polygon(c((1:10)-o,rev((1:10)-0)),c(yrrac9[2,],rev(yrrac9[3,])),
             border=NA, col=gray(0.9))
     polygon(c((1:10)-o,rev((1:10)-0)),c(yrrac10[2,],rev(yrrac10[3,])),
             border=NA, col=gray(0.9))
-    
+
     lines((1:10)-o,yrrac9['mean',], type='p',pch=10)
     lines(yrrac9[1,])
     #arrows((1:10)-o,yrrac9[2,],(1:10)-o,yrrac9[3,],angle=90,code=3,length=.1)
-    
+
     lines((1:10)+o,yrrac10['mean',], type='p',pch=16)
     lines(yrrac10[1,],lty=2)
     #arrows((1:10)+o,yrrac10[2,],(1:10)+o,yrrac10[3,],angle=90,code=3,length=.1)
@@ -299,7 +299,7 @@ tdeaths = aggregate(dat$tdeaths,by=list(dat$Years),sum)
 dat$wt=as.numeric(NA)
 for(y in unique(dat$Years)){
   print(y)
-  dat$wt[dat$Years==y] = dat$tdeaths[dat$Years==y]/tdeaths$x[tdeaths$Group.1 == y]
+  dat$wt[dat$Years==y] = dat$tdeaths[dat$Years==y]/tdeaths$x[tdeaths$Group.1 = y]
   }
 
 #summarize posterior draws
@@ -311,37 +311,27 @@ ppd.yrrac = apply(ppd.yrrac.exp,2,FUN=function(x) x*dat$wt)
 #ppd.yrrac = apply(t(model[[2]]$ppd),2,FUN=function(x) x*dat$wt)
   tst.m.yrrac = aggregate(ppd.yrrac.exp,by=list(dat$Years),mean)
   plt.m.yrrac = apply(tst.m.yrrac[,2:ncol(ppd.yrrac)],1,eff)
-  
+
   tst.yrrac = aggregate(list(ppd.yrrac,dat$wt),by=list(dat$Years),sum)
   plt.yrrac = apply(tst.yrrac[,2:ncol(ppd.yrrac)],1,eff)
 
 lim = is.finite(dat$yrrdc)
-  
+
 ppd.yrrdc.exp = t(exp(model[[4]]$ppd))
 ppd.yrrdc = apply(ppd.yrrdc.exp,2,FUN=function(x) x*dat$wt[lim])
 #ppd.yrrdc = t(model[[4]]$ppd)
-<<<<<<< HEAD
-  tst.yrrdc = aggregate(ppd.yrrdc,by=list(dat$Years[is.finite(dat$yrrdc)]),mean)
-  plt.yrrdc = apply(tst.yrrdc[,2:ncol(tst.yrrdc)],1,eff)
-
-ob.m.yrrac=aggregate(exp(dat$yrrac),by=list(dat$Years),mean)
-
-ob.yrrac=aggregate(exp(dat$yrrac)*dat$wt,by=list(dat$Years),sum)
-ob.yrrdc=aggregate(exp(dat$yrrdc[is.finite(dat$yrrdc)]),by=list(dat$Years[is.finite(dat$yrrdc)]),mean)
-=======
   tst.m.yrrdc = aggregate(ppd.yrrdc.exp,by=list(dat$Years[lim]),mean)
   plt.m.yrrdc = apply(tst.m.yrrdc[,2:ncol(tst.m.yrrdc)],1,eff)
 
   tst.yrrdc = aggregate(list(ppd.yrrdc,dat$wt[lim]),by=list(dat$Years[lim]),sum)
   plt.yrrdc = apply(tst.yrrdc[,2:ncol(ppd.yrrdc)],1,eff)
-  
-  
+
+
 ob.m.yrrac=aggregate(exp(dat$yrrac),by=list(dat$Years),mean)
 ob.m.yrrdc=aggregate(exp(dat$yrrdc[lim]),by=list(dat$Years[lim]),mean)
 
 ob.yrrac=aggregate(exp(dat$yrrac)*dat$wt,by=list(dat$Years),sum)
 ob.yrrdc=aggregate(exp(dat$yrrdc[lim])*dat$wt[lim],by=list(dat$Years[lim]),sum)
->>>>>>> old-state
 #ob.yrrac=aggregate(dat$yrrac,by=list(dat$Years),mean)
 #ob.yrrdc=aggregate(dat$yrrdc[is.finite(dat$yrrdc)],by=list(dat$Years[is.finite(dat$yrrdc)]),mean)
 
@@ -350,22 +340,8 @@ ob.yrrdc=aggregate(exp(dat$yrrdc[lim])*dat$wt[lim],by=list(dat$Years[lim]),sum)
 #unweighted ppd plot
 #@@@@@@@@@@@@@@@@@@@@@@
 
-  
-<<<<<<< HEAD
-#png(paste0(imdir,'series1.png'))  
-par(mfrow=c(1,1),mar=c(1,3,1,3))
 
-yl=range(c(ob.yrrac$x,plt.m.yrrac,ob.yrrdc$x,plt.yrrdc))
-
-#yl=range(c(ob.yrrac$x,plt.yrrac))
-plot(1,type='n',ylim=yl,xlim=c(1,10),xaxt='n')#,log="y")
-#split icd9
-#polygon(c(1:5,rev(1:5)),
-#        c(plt.yrrac[2,1:5],rev(plt.yrrac[3,1:5])),
-#        border=NA, col=gray(0.9)
-#)
-=======
-png(paste0(imdir,'logscale-series1.png'))  
+png(paste0(imdir,'logscale-series1.png'))
 par(mfrow=c(1,1),mar=c(3,3,3,3))
 
 
@@ -424,14 +400,13 @@ dev.off()
 #@@@@@@@@@@@@@@@@@@@@@@
 
 
-png(paste0(imdir,'logscale-series1-wt.png'))  
+png(paste0(imdir,'logscale-series1-wt.png'))
 par(mfrow=c(1,1),mar=c(3,3,3,3))
 
 yl=range(c(ob.yrrac$x,plt.m.yrrac,ob.yrrdc$x,plt.m.yrrdc))
 
 #yl=range(c(ob.yrrac$x,plt.yrrac))
 plot(1,type='n',ylim=yl,xlim=c(1,10),xaxt='n',log="y")
->>>>>>> old-state
 
 polygon(c(1:5,rev(1:5)),
         c(plt.m.yrrac[2,1:5],rev(plt.m.yrrac[3,1:5])),
@@ -442,11 +417,7 @@ polygon(c(1:5,rev(1:5)),
 #lines(1:5,plt.yrrac[1,1:5],type="l")
 #lines(1:5,ob.yrrac$x[1:5],type="p",pch=10)
 lines(1:5,plt.m.yrrac[1,1:5],type="l", lty=2)
-<<<<<<< HEAD
-lines(1:5,ob.m.yrrac$x[1:5],type="p",pch=15)
-=======
 lines(1:5,ob.yrrac$x[1:5],type="p",pch=15)
->>>>>>> old-state
 
 
 #icd10
@@ -478,17 +449,12 @@ axis(1,at=1:10,labels=1994:2003)
 T=axTicks(2) #get axis ticks from left side
 #plot logged rate
 axis(4,at=T,labels=rnd(log(T),2))
-<<<<<<< HEAD
-#dev.off()
-=======
+
 dev.off()
->>>>>>> old-state
 
 
 #distrubution of cell effects
 #mu_i = model[[2]]$mu_i
-<<<<<<< HEAD
-=======
 
 
 
@@ -500,11 +466,11 @@ dev.off()
 
 ###############
 ###############
-#delta ppd draw (across two levels) - BDA III, p. 118 
+#delta ppd draw (across two levels) - BDA III, p. 118
 ###############
 ###############
 
-#load data as saved to 
+#load data as saved to
 load(paste0(outdir,'yrracdat.RData'))
 load(paste0(outdir,'yrrdcdat.RData'))
 
@@ -520,17 +486,17 @@ makeppt=function(m,dat){
   # dat is a design matrix of data in a list in the same form as the stan model
   # dat is saved from the analysis set up
   #returns a list of ppts including implied icd9 and icd10
-  
-  #make container the size of ppt without periods 
+
+  #make container the size of ppt without periods
   #(to cover both icd9 and icd10)
   ppt = list(model[[m]]$ppd,model[[m]]$ppd)
   names(ppt) = c('icd9','icd10')
-  
+
   #iterate through posterior
   for(iter in 1:nrow(ppt[[1]])){
-    
+
     if(iter%%500==0){cat('Coding',iter,'of',nrow(ppt[[1]]),'\n')}
-    
+
     #collect previously drawn mu_i's
     mu_i.9=cbind(1:dat$IDS,model[[m]]$mu_i[iter,1,])
     mu_i.10=cbind(1:dat$IDS,model[[m]]$mu_i[iter,2,])
@@ -539,17 +505,17 @@ makeppt=function(m,dat){
       ieff.9[ieff.9[,1]==i,2] = mu_i.9[i,2]
       ieff.10[ieff.10[,1]==i,2] = mu_i.10[i,2]
     }
-    
+
     #calculate E(y) (using only gammas and alpha(drawn from mu))
     yhat.9 = dat$z %*% model[[m]]$gamma[iter,1,] + ieff.9[,2];
     yhat.10 = dat$z %*% model[[m]]$gamma[iter,2,] + ieff.10[,2];
-    
+
     if(iter%%1000==0){
       cat('yhat (mean,min,max)\n')
       print(c(mean(yhat.9),range(yhat.9)))
       print(c(mean(yhat.10),range(yhat.10)))
     }
-    
+
     ##draw tilde{delta}, tilde{y}
     yr=range(dat$t)
     mu_t.9 = cbind(yr[1]:yr[2],rnorm(10,mean=0,sd=model[[m]]$delta[iter]))
@@ -568,22 +534,22 @@ makeppt=function(m,dat){
       print(c(mean(newhat.9),range(newhat.9)))
       print(c(mean(newhat.10),range(newhat.10)))
     }
-    
-    n=ncol(ppt[[1]])    
+
+    n=ncol(ppt[[1]])
     ppt[[1]][iter,] = rnorm(n,mean=newhat.9,sd=model[[m]]$sig[iter,1])
     ppt[[2]][iter,] = rnorm(n,mean=newhat.10,sd=model[[m]]$sig[iter,2])
-    
+
     if(iter%%1000==0){
       cat('tilde{y} (mean,min,max)\n')
       print(c(mean(ppt[[1]]),range(ppt[[1]])))
       print(c(mean(ppt[[2]]),range(ppt[[2]])))
     }
-    
-    
+
+
   }
-  
+
   return(ppt)
-  
+
 }
 
 ppt.yrrac = makeppt(m=2,dat=yrracdat)
@@ -608,7 +574,7 @@ yrrdc.plt = lapply(yrrdc.m,FUN=function(x)
 #unweighted ppd plot
 #@@@@@@@@@@@@@@@@@@@@@@
 
-png(paste0(imdir,'series2.png'))  
+png(paste0(imdir,'series2.png'))
 par(mfrow=c(1,1),mar=c(3,3,3,3))
 
 
@@ -679,7 +645,7 @@ ob.wtyrrac=aggregate(exp(dat$yrrac),by=list(dat$Years),FUN=
 ob.wtyrrdc=aggregate(exp(dat$yrrdc),by=list(dat$Years),FUN=
                        function(x) sum(x*wt))
 
-png(paste0(imdir,'wt-series2.png'))  
+png(paste0(imdir,'wt-series2.png'))
 par(mfrow=c(1,1),mar=c(3,3,3,3))
 
 
@@ -722,4 +688,4 @@ lines(1:10,ob.wtyrrac$x[1:10],type="p",pch=15)
 lines(1:10,ob.wtyrrdc$x[1:10],type="p",pch=16)
 
 dev.off()
->>>>>>> old-state
+

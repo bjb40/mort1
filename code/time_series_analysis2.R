@@ -80,7 +80,7 @@ dev.off()
 as = seq(40,85,by=5)
 raw$agegroup = as.numeric(NA)
 for(j in 1:length(as)){
-  raw$agegroup[raw$ager >= as[j]] = j 
+  raw$agegroup[raw$ager >= as[j]] = j
 }
 
 table(raw$ager,raw$agegroup)
@@ -130,7 +130,7 @@ for(i in 1:length(unique(pool$agegroup))){
 #lots of structural zeros with "other" as the race, so "other race is eliminated"
 lim = other != 1 #rep(T,length(CRc))#is.finite(CRc)
 
-ycrc = log(CRc[lim]) 
+ycrc = log(CRc[lim])
 yrrac = log(RRAc[lim])
 yrrdc = log(RRDc[lim])
 tdeaths = pool$tdeaths[lim]
@@ -145,7 +145,7 @@ x1 = cbind(
   #rep(1,length(y)),
   agedum[lim,1:ncol(agedum)],
   yrs[lim],
-  pool$female[lim], 
+  pool$female[lim],
   pool$complex[lim],
   home[lim],
   ltcare[lim],
@@ -200,20 +200,8 @@ rm(statadat,cells,cellsub,equals,i)
 #@@@@@@@@@@@@@@@@@@@
 chains=4
 
-<<<<<<< HEAD
-#iters=7500
-#iters = 5000
-iters=2500
 #iters = 1000
-
-thin=1
-
-burn=iters/2
-
-  
-=======
-#iters = 1000
-iters = 2500 
+iters = 2500
 #iters = 5000
 #iters = 7500
 #iters=10000
@@ -224,7 +212,7 @@ burn=iters/2
 thin=1
 #thin=5
 
->>>>>>> old-state
+
 #load rstan
 library('rstan')
 
@@ -251,26 +239,16 @@ TDS=length(unique(td))
 YRS=length(unique(t))
 yrctr = 6 #number to recenter to start at value of 1 for indexing
 
-<<<<<<< HEAD
-yrrac1 = stan("bhm.stan", data=c('y','id','t','z','N','IDS','P'),
-              seed=1404399575,
-              chains=chains,
-              iter=iters,
-              thin=thin,
-              warmup=burn,
-              verbose=T);
-=======
 dnames = c('y','id','t','z','N','IDS','P','td','TDS','YRS','yrctr')
 
 #save data used for yrrdc models
-yrracdat = lapply(dnames,get)
+yrracdat = lapply(dnames,get,envir=.GlobalEnv) #otherwise defaults to base
 names(yrracdat) = dnames
 save(yrracdat,file=paste0(outdir,'yrracdat.RData'))
-rm(yrracdat)
->>>>>>> old-state
+#rm(yrracdat)
 
 
-yrrac1 = stan("bhm.stan", 
+yrrac1 = stan("bhm.stan",
               data=c('y','id','t','z','N','IDS','P','YRS','yrctr'),
               seed=1404399575,
               warmup=burn,
@@ -302,28 +280,17 @@ print(round(sum$summary,3))
 cat('\n\nFit:\n')
 print(dic(yrrac1))
 print(waic(yrrac1))
-
-
 sink()
 
 rm(yrrac1,samp)
 
-<<<<<<< HEAD
-yrrac2 = stan("bhm-changepoint.stan", data=c('y','id','t','z','N','IDS','P','TDS','td'),
-              seed=1404399575,
-              chains=chains,
-              iter=iters,
-              thin=thin,
-              warmup=burn,
-=======
-yrrac2 = stan("bhm-changepoint.stan", 
+yrrac2 = stan("bhm-changepoint.stan",
               data=c('y','id','t','z','N','IDS','P','TDS','td','YRS','yrctr'),
               seed=1404399575,
               warmup=burn,
               thin=thin,
               chains=chains,
               iter=iters,
->>>>>>> old-state
               verbose=F);
 
 samp = extract(yrrac2,pars=c('beta','gamma','zi','delta','sig','loglik','dev','ppd','L_Omega','mu_i','mu_t'))
@@ -368,27 +335,17 @@ IDS=length(unique(id))
 TDS=length(unique(td))
 
 #save data used for yrrdc models
-yrrdcdat = lapply(dnames,get)
+yrrdcdat = lapply(dnames,get,envir=.GlobalEnv) #otherwise defaults to base
 names(yrrdcdat) = dnames
 save(yrrdcdat,file=paste0(outdir,'yrrdcdat.RData'))
 rm(yrrdcdat)
 
-
-<<<<<<< HEAD
-yrrdc1 = stan("bhm.stan", data=c('y','id','t','z','N','IDS','P'),
-              seed=1404399575,
-              chains=chains,
-              iter=iters,
-              thin=thin,
-              warmup=burn,
-=======
-yrrdc1 = stan("bhm.stan", 
+yrrdc1 = stan("bhm.stan",
               data=c('y','id','t','z','N','IDS','P','YRS','yrctr'),
               warmup=burn,
               seed=1404399575,
               chains=chains,
               iter=iters,
->>>>>>> old-state
               verbose=F);
 
 samp = extract(yrrdc1,pars=c('beta','gamma','zi','delta','sig','loglik','dev','ppd'))
@@ -418,21 +375,12 @@ sink()
 
 rm(yrrdc1,samp)
 
-<<<<<<< HEAD
-yrrdc2 = stan("bhm-changepoint.stan", data=c('y','id','t','z','N','IDS','P','TDS','td'),
-              seed=1404399575,
-              chains=chains,
-              iter=iters,
-              warmup=burn,
-              thin=thin,
-=======
-yrrdc2 = stan("bhm-changepoint.stan", 
+yrrdc2 = stan("bhm-changepoint.stan",
               data=c('y','id','t','z','N','IDS','P','TDS','td','YRS','yrctr'),
               seed=1404399575,
               warmup=burn,
               chains=chains,
               iter=iters,
->>>>>>> old-state
               verbose=F);
 
 samp = extract(yrrdc2,pars=c('beta','gamma','zi','delta','sig','loglik','dev','ppd','L_Omega','mu_i','mu_t'))
