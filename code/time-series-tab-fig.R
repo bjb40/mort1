@@ -475,8 +475,8 @@ load(paste0(outdir,'yrracdat.RData'))
 load(paste0(outdir,'yrrdcdat.RData'))
 
 #reassign "t" to dat$year -- it gets lost for some reason (probably dynamic assignment in code)
-yrracdat$t = dat$Years
-yrrdcdat$t = dat$Years[is.finite(dat$yrrdc)]
+#yrracdat$t = dat$Years
+#yrrdcdat$t = dat$Years[is.finite(dat$yrrdc)]
 
 #copy structure -- need to draw a random year variable,
 #and extend through the entire set of periods (based on a1 and a2)
