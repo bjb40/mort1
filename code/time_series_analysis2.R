@@ -200,8 +200,8 @@ rm(statadat,cells,cellsub,equals,i)
 #@@@@@@@@@@@@@@@@@@@
 chains=4
 
-#iters = 1000
-iters = 2500
+iters = 1500
+#iters = 2500
 #iters = 5000
 #iters = 7500
 #iters=10000
@@ -249,7 +249,7 @@ save(yrracdat,file=paste0(outdir,'yrracdat.RData'))
 
 
 yrrac1 = stan("bhm.stan",
-              data=c('y','id','t','z','N','IDS','P','YRS','yrctr'),
+              data=yrracdat,
               seed=1404399575,
               warmup=burn,
               chains=chains,

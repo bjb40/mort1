@@ -24,16 +24,13 @@ parameters{
   real<lower=0> zi; //(scale for intercept)
   real<lower=0> delta; // variance for years
   vector[IDS] omega_i; //container for random normal draw to distribute cross-cell error
-  vector[YRS] omega_t; //container for random normal draw across year
+  vector[YRS] mu_t; //container for student-t draw across years
 }
 
 transformed parameters {
     vector[IDS] mu_i; // age-specific conditonal effects
-    vector[YRS] mu_t; // year-specific effects
     vector[N] yhat;
-    vector[YRS] that; 
     mu_i <- omega_i*zi;
-    mu_t <- omega_t*delta;
 
   for(n in 1:N){
     yhat[n] <- mu_i[id[n]] + t[n]*mu_t[t[n] +yrctr] + t[n]*beta + z[n]*gamma;
@@ -42,14 +39,9 @@ transformed parameters {
 }
 
 model{
-
+#parameter expansiton for student-t on pp. 294-295 BDA3
   to_vector(omega_i) ~ normal(0,1);
-<<<<<<< HEAD
-=======
-  to_vector(omega_t) ~ normal(0,1); // can overdisperse as necessary, but may need reparameter
 
->>>>>>> old-state
-  
     y ~ normal(yhat,sig);
   
   //prior
@@ -58,7 +50,9 @@ model{
   sig ~ normal(0,5);
 
   zi ~ cauchy(0,5);
-  delta ~ cauchy(0,15);
+  #pp. 294-295 BDA3
+  delta ~ cauchy(0,5);
+  mu_t ~ student_t(9,0,delta);
   
 }
 
