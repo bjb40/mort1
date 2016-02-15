@@ -29,16 +29,14 @@ parameters{
   real<lower=0> delta; //scale for year-specific errors
   cholesky_factor_corr[2] L_Omega; //faster for programming; correlation matrix
   matrix[TDS,IDS] omega_i; //container for random normal draw to distribute cross-cell error
-  vector[YRS] omega_t; //container for random normal draw to distribut cross-year error
+  vector[YRS] mu_t; //random error for years - robust on student t
 }
 
 transformed parameters {
     matrix[TDS,IDS] mu_i; // age-specific conditonal effects
-    vector[YRS] mu_t; // year-specific conditional effects
     vector[N] yhat;
     vector[N] sigma; #container for 2 level 1 variances
     mu_i <- diag_matrix(zi)*L_Omega*omega_i;
-    mu_t <- delta*omega_t;
 
   for(n in 1:N){
     yhat[n] <- mu_i[td[n],id[n]] + t[n]*mu_t[t[n]+yrctr] + t[n]*beta[td[n]] + z[n]*gamma[td[n]]';
@@ -51,7 +49,6 @@ transformed parameters {
 model{
 
   to_vector(omega_i) ~ normal(0,1);
-  to_vector(omega_t) ~ normal(0,1);
 
   y ~ normal(yhat,sigma);
   
@@ -60,7 +57,8 @@ model{
   to_vector(gamma) ~ normal(0,5);
   sig ~ normal(0,5);
   zi ~ cauchy(0,5);
-  delta ~ cauchy(0,15);
+  delta ~ cauchy(0,10);
+  mu_t ~ student_t(4,0,delta);
   L_Omega ~ lkj_corr_cholesky(1); //1 is equiv to uniform prior; >1 diagonal <1 high
 
 }

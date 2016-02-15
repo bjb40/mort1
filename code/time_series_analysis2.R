@@ -376,7 +376,7 @@ sink()
 rm(yrrdc1,samp)
 
 yrrdc2 = stan("bhm-changepoint.stan",
-              data=c('y','id','t','z','N','IDS','P','TDS','td','YRS','yrctr'),
+              data=yrrdcdat,
               seed=1404399575,
               warmup=burn,
               chains=chains,

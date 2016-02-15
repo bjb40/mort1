@@ -72,6 +72,25 @@ delta=function(s,c,p){
   if(p==T){return(printeff(d,c))}
 }
 
+#scaled student t for robust functions
+rscaled_t = function(n,df,s){
+  # returns a vector of n length from a scaled student t with degrees of freedem df, and
+  # based on a mixture of normals, see BDA 3 pp. 294,576
+  #
+  # Args:
+  #   n: number of samples to draw
+  #   df: degrees of freedom
+  #   s: scale (equivalent to sd for normal draw)
+  #
+  # Returns:
+  #   a named vector n length constituting a random draw from the scaled t distribution
+  alpha=df/2
+  beta=alpha*s
+  v_i = 1/rgamma(n,shape=alpha,rate=beta)
+  return(rnorm(1000,mean=0,sd=v_i))
+}
+
+
 rawdir = "H:/projects/mort1/dat~/"
 outdir = "H:/projects/mort1/output/"
 imdir = "H:/projects/mort1/img~/"
@@ -518,8 +537,8 @@ makeppt=function(m,dat){
 
     ##draw tilde{delta}, tilde{y}
     yr=range(dat$t)
-    mu_t.9 = cbind(yr[1]:yr[2],rnorm(10,mean=0,sd=model[[m]]$delta[iter]))
-    mu_t.10 = cbind(yr[1]:yr[2],rnorm(10,mean=0,sd=model[[m]]$delta[iter]))
+    mu_t.9 = cbind(yr[1]:yr[2],rscaled_t(n=10,df=9,s=model[[m]]$delta[iter]))
+    mu_t.10 = cbind(yr[1]:yr[2],rscaled_t(n=10,df=9,s=model[[m]]$delta[iter]))
     teff.9 = teff.10 = cbind(dat$t,NA)
     for(t in 1:nrow(mu_t.9)){
       teff.9[teff.9[,1]==mu_t.9[t,1],2] = mu_t.9[t,2]
@@ -578,20 +597,20 @@ png(paste0(imdir,'series2.png'))
 par(mfrow=c(1,1),mar=c(3,3,3,3))
 
 
-yl=range(c(ob.m.yrrac$x,yrrac.plt,yrrdc.plt,ob.m.yrrdc$x))
+#yl=range(c(ob.m.yrrac$x,yrrac.plt,yrrdc.plt,ob.m.yrrdc$x))
+yl=range(c(yrrdc.plt,ob.m.yrrdc$x))
 
-#yl=range(c(ob.yrrac$x,plt.yrrac))
 plot(1,type='n',ylim=yl,xlim=c(1,10),xaxt='n')#,log='y')
 
-polygon(c(1:10,rev(1:10)),
-        c(yrrac.plt$icd9[2,1:10],rev(yrrac.plt$icd9[3,1:10])),
-        border=NA, col=gray(0.75,alpha=.25)
-)
+#polygon(c(1:10,rev(1:10)),
+#        c(yrrac.plt$icd9[2,1:10],rev(yrrac.plt$icd9[3,1:10])),
+#        border=NA, col=gray(0.75,alpha=.25)
+#)
 
-polygon(c(1:10,rev(1:10)),
-        c(yrrac.plt$icd10[2,1:10],rev(yrrac.plt$icd10[3,1:10])),
-        border=NA, col=gray(0.75,alpha=.25)
-)
+#polygon(c(1:10,rev(1:10)),
+#        c(yrrac.plt$icd10[2,1:10],rev(yrrac.plt$icd10[3,1:10])),
+#        border=NA, col=gray(0.75,alpha=.25)
+#)
 
 
 polygon(c(1:10,rev(1:10)),
@@ -606,14 +625,14 @@ polygon(c(1:10,rev(1:10)),
 
 
 #lines(1:10,plt.m.yrrac[1,1:10],type="l", lty=1)
-lines(1:10,yrrac.plt$icd9[1,],type='l',lty=2)
-lines(1:10,yrrac.plt$icd10[1,],type='l',lty=3)
+#lines(1:10,yrrac.plt$icd9[1,],type='l',lty=2)
+#lines(1:10,yrrac.plt$icd10[1,],type='l',lty=3)
 
 lines(1:10,yrrdc.plt$icd9[1,],type='l',lty=2)
 lines(1:10,yrrdc.plt$icd10[1,],type='l',lty=3)
 
 
-lines(1:10,ob.m.yrrac$x[1:10],type="p",pch=15)
+#lines(1:10,ob.m.yrrac$x[1:10],type="p",pch=15)
 lines(1:10,ob.m.yrrdc$x[1:10],type='p',pch=16)
 
 abline(v=5.5)
@@ -677,15 +696,15 @@ polygon(c(1:10,rev(1:10)),
 
 
 #lines(1:10,plt.m.yrrac[1,1:10],type="l", lty=1)
-lines(1:10,yrrac.wtplt$icd9[1,],type='l',lty=2)
-lines(1:10,yrrac.wtplt$icd10[1,],type='l',lty=3)
+#lines(1:10,yrrac.wtplt$icd9[1,],type='l',lty=2)
+#lines(1:10,yrrac.wtplt$icd10[1,],type='l',lty=3)
 
 lines(1:10,yrrdc.wtplt$icd9[1,],type='l',lty=2)
 lines(1:10,yrrdc.wtplt$icd10[1,],type='l',lty=3)
 
 
-lines(1:10,ob.wtyrrac$x[1:10],type="p",pch=15)
-lines(1:10,ob.wtyrrdc$x[1:10],type="p",pch=16)
+#lines(1:10,ob.wtyrrac$x[1:10],type="p",pch=15)
+#lines(1:10,ob.wtyrrdc$x[1:10],type="p",pch=16)
 
 dev.off()
 
