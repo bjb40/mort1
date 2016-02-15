@@ -88,11 +88,19 @@ table(raw$ager,raw$agegroup)
 ids = c('ICD10','year','female','race','pd','complex','agegroup')
 pool=aggregate(raw[,c('uc_c_Sum','uc_n_Sum','any_c_Sum','any_n_Sum')], by=raw[,ids],sum)
 
+#create weight matrix -- WRONG WEIGHTS -- WOULD NEED POPULATION WEIGHTS, NOT DEATH WEIGHTS
+ndeaths=cbind(raw[,ids],apply(raw[,c('uc_c_Sum','uc_n_Sum','uc_a_Sum','uc_u_Sum')],1,sum))
+ndeaths=aggregate(ndeaths[,length(ndeaths)],by=ndeaths[,ids],sum)
+colnames(ndeaths)[length(ndeaths)] = 'tdeaths'
+pool$tdeaths = ndeaths$tdeaths
+
 #calculate DV concepts and expand race/placdth variables
 #can log an calculate RRAc without much trouble; the others, not so much
 RRAc = pool[,'any_c_Sum']/pool[,'any_n_Sum']
 RRDc = pool[,'uc_c_Sum']/pool[,'uc_n_Sum']
 CRc = RRDc/RRAc
+tdeaths=pool$tdeaths
+
 
 #proportion of structural zeros
 print(sum(is.finite(CRc)==F)/length(CRc))
@@ -109,7 +117,6 @@ black = other = rep(0,nrow(pool))
 black[pool$race == 1] = 1
 other[pool$race == 2] = 1
 yrs = pool$year-1999
-yrsxicd = yrs*pool$ICD10
 
 agedum = matrix(0,length(pool$agegroup),length(unique(pool$agegroup)))
 for(i in 1:length(unique(pool$agegroup))){
@@ -126,6 +133,7 @@ lim = other != 1 #rep(T,length(CRc))#is.finite(CRc)
 ycrc = log(CRc[lim]) 
 yrrac = log(RRAc[lim])
 yrrdc = log(RRDc[lim])
+tdeaths = pool$tdeaths[lim]
 
 #sort of normal --- 3 structural zeros leading to infinite /set to maximum negative
 for(y in list(yrrac,yrrdc,ycrc)){
@@ -161,7 +169,7 @@ colnames(x1) = bnames1
 x1=data.frame(x1)
 
 #clean up
-rm(key,agedum,pool,raw,black,ltcare,lim,oplace,other,y,yrs,yrsxicd,CRc,RRAc,RRDc,as,home,icd10)
+rm(ndeaths,key,agedum,pool,raw,black,ltcare,lim,oplace,other,y,yrs,yrsxicd,CRc,RRAc,RRDc,as,home,icd10)
 
 #export to csv for analysis in stata
 #prepare 'panel' identifier based on observed characteristics
@@ -181,7 +189,7 @@ for(i in 1:nrow(cells)){
   x1[equals,'cell'] = i
 }
 
-statadat = cbind(yrrac,yrrdc,x1)
+statadat = cbind(tdeaths,yrrac,yrrdc,x1)
 
 write.csv(statadat,paste0(outdir,'stata-series.csv'))
 
@@ -192,6 +200,7 @@ rm(statadat,cells,cellsub,equals,i)
 #@@@@@@@@@@@@@@@@@@@
 chains=4
 
+<<<<<<< HEAD
 #iters=7500
 #iters = 5000
 iters=2500
@@ -202,6 +211,20 @@ thin=1
 burn=iters/2
 
   
+=======
+#iters = 1000
+iters = 2500 
+#iters = 5000
+#iters = 7500
+#iters=10000
+
+burn=iters/2
+#burn=2500
+
+thin=1
+#thin=5
+
+>>>>>>> old-state
 #load rstan
 library('rstan')
 
@@ -225,7 +248,10 @@ td = t #initialize
   td[t<0] = 1 #icd9
   td[t>=0] = 2 #icd10
 TDS=length(unique(td))
+YRS=length(unique(t))
+yrctr = 6 #number to recenter to start at value of 1 for indexing
 
+<<<<<<< HEAD
 yrrac1 = stan("bhm.stan", data=c('y','id','t','z','N','IDS','P'),
               seed=1404399575,
               chains=chains,
@@ -233,15 +259,34 @@ yrrac1 = stan("bhm.stan", data=c('y','id','t','z','N','IDS','P'),
               thin=thin,
               warmup=burn,
               verbose=T);
+=======
+dnames = c('y','id','t','z','N','IDS','P','td','TDS','YRS','yrctr')
 
-samp = extract(yrrac1,pars=c('beta','gamma','zi','sig','loglik','dev','ppd'))
+#save data used for yrrdc models
+yrracdat = lapply(dnames,get)
+names(yrracdat) = dnames
+save(yrracdat,file=paste0(outdir,'yrracdat.RData'))
+rm(yrracdat)
+>>>>>>> old-state
+
+
+yrrac1 = stan("bhm.stan", 
+              data=c('y','id','t','z','N','IDS','P','YRS','yrctr'),
+              seed=1404399575,
+              warmup=burn,
+              chains=chains,
+              iter=iters,
+              thin=thin,
+              verbose=T);
+
+samp = extract(yrrac1,pars=c('beta','gamma','zi','delta','sig','loglik','dev','ppd'))
 save(samp,file=paste0(outdir,'m1samp.gz'),compress=T)
 
 sink(paste0(outdir,'stan-m1.txt'))
 elapsed = get_elapsed_time(yrrac1)
 elapsed = max(rowSums(elapsed))/60 #minutes elapsed
 
-sum=summary(yrrac1,pars=c('beta','gamma','zi','sig'))
+sum=summary(yrrac1,pars=c('beta','gamma','zi','delta','sig'))
 cat('Seed:      \t\t\t',get_seed(yrrac1))
 cat('Rhat range:\t\t\t',round(range(summary(yrrac1)$summary[,'Rhat']),3))
 
@@ -263,15 +308,25 @@ sink()
 
 rm(yrrac1,samp)
 
+<<<<<<< HEAD
 yrrac2 = stan("bhm-changepoint.stan", data=c('y','id','t','z','N','IDS','P','TDS','td'),
               seed=1404399575,
               chains=chains,
               iter=iters,
               thin=thin,
               warmup=burn,
+=======
+yrrac2 = stan("bhm-changepoint.stan", 
+              data=c('y','id','t','z','N','IDS','P','TDS','td','YRS','yrctr'),
+              seed=1404399575,
+              warmup=burn,
+              thin=thin,
+              chains=chains,
+              iter=iters,
+>>>>>>> old-state
               verbose=F);
 
-samp = extract(yrrac2,pars=c('beta','gamma','zi','sig','loglik','dev','ppd','L_Omega','mu_i'))
+samp = extract(yrrac2,pars=c('beta','gamma','zi','delta','sig','loglik','dev','ppd','L_Omega','mu_i','mu_t'))
 save(samp,file=paste0(outdir,'m2samp.gz'),compress=T)
 
 sink(paste0(outdir,'stan-output-m2.txt'))
@@ -279,9 +334,10 @@ sink(paste0(outdir,'stan-output-m2.txt'))
 elapsed = get_elapsed_time(yrrac2)
 elapsed = max(rowSums(elapsed))/60 #minutes elapsed
 
-sum=summary(yrrac2,pars=c('beta','gamma','sig','zi','L_Omega'))
+sum=summary(yrrac2,pars=c('beta','gamma','sig','delta','zi','L_Omega'))
 cat('Rhat range:\t\t\t',round(range(summary(yrrac2)$summary[,'Rhat']),3))
 
+cat('\nwWarmup:\t\t\t',burn)
 cat('\nIterations:\t\t\t',iters)
 cat('\nElapsed min:\t\t\t',round(elapsed,3))
 cat('\nIters/minute:\t\t\t',round((iters/elapsed),3))
@@ -311,16 +367,31 @@ P=ncol(z)
 IDS=length(unique(id))
 TDS=length(unique(td))
 
+#save data used for yrrdc models
+yrrdcdat = lapply(dnames,get)
+names(yrrdcdat) = dnames
+save(yrrdcdat,file=paste0(outdir,'yrrdcdat.RData'))
+rm(yrrdcdat)
 
+
+<<<<<<< HEAD
 yrrdc1 = stan("bhm.stan", data=c('y','id','t','z','N','IDS','P'),
               seed=1404399575,
               chains=chains,
               iter=iters,
               thin=thin,
               warmup=burn,
+=======
+yrrdc1 = stan("bhm.stan", 
+              data=c('y','id','t','z','N','IDS','P','YRS','yrctr'),
+              warmup=burn,
+              seed=1404399575,
+              chains=chains,
+              iter=iters,
+>>>>>>> old-state
               verbose=F);
 
-samp = extract(yrrdc1,pars=c('beta','gamma','zi','sig','loglik','dev','ppd'))
+samp = extract(yrrdc1,pars=c('beta','gamma','zi','delta','sig','loglik','dev','ppd'))
 save(samp,file=paste0(outdir,'m3samp.gz'),compress=T)
 
 sink(paste0(outdir,'stan-output-m3.txt'))
@@ -328,7 +399,7 @@ sink(paste0(outdir,'stan-output-m3.txt'))
 elapsed = get_elapsed_time(yrrdc1)
 elapsed = max(rowSums(elapsed))/60 #minutes elapsed
 
-sum=summary(yrrdc1,pars=c('beta','gamma','zi','sig'))
+sum=summary(yrrdc1,pars=c('beta','gamma','zi','delta','sig'))
 cat('Rhat range:\t\t\t',round(range(summary(yrrdc1)$summary[,'Rhat']),3))
 cat('\nIterations:\t\t\t',iters)
 cat('\nElapsed min:\t\t\t',round(elapsed,3))
@@ -347,15 +418,24 @@ sink()
 
 rm(yrrdc1,samp)
 
+<<<<<<< HEAD
 yrrdc2 = stan("bhm-changepoint.stan", data=c('y','id','t','z','N','IDS','P','TDS','td'),
               seed=1404399575,
               chains=chains,
               iter=iters,
               warmup=burn,
               thin=thin,
+=======
+yrrdc2 = stan("bhm-changepoint.stan", 
+              data=c('y','id','t','z','N','IDS','P','TDS','td','YRS','yrctr'),
+              seed=1404399575,
+              warmup=burn,
+              chains=chains,
+              iter=iters,
+>>>>>>> old-state
               verbose=F);
 
-samp = extract(yrrdc2,pars=c('beta','gamma','zi','sig','loglik','dev','ppd','L_Omega','mu_i'))
+samp = extract(yrrdc2,pars=c('beta','gamma','zi','delta','sig','loglik','dev','ppd','L_Omega','mu_i','mu_t'))
 save(samp,file=paste0(outdir,'m4samp.gz'),compress=T)
 
 sink(paste0(outdir,'stan-output-m4.txt'))
@@ -363,7 +443,7 @@ sink(paste0(outdir,'stan-output-m4.txt'))
 elapsed = get_elapsed_time(yrrdc2)
 elapsed = max(rowSums(elapsed))/60 #minutes elapsed
 
-sum=summary(yrrdc2,pars=c('beta','gamma','zi','sig','L_Omega'))
+sum=summary(yrrdc2,pars=c('beta','gamma','zi','delta','sig','L_Omega'))
 cat('Rhat range:\t\t\t',round(range(summary(yrrdc2)$summary[,'Rhat']),3))
 
 cat('\nIterations:\t\t\t',iters)
