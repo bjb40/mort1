@@ -537,8 +537,8 @@ makeppt=function(m,dat){
 
     ##draw tilde{delta}, tilde{y}
     yr=range(dat$t)
-    mu_t.9 = cbind(yr[1]:yr[2],rscaled_t(n=10,df=9,s=model[[m]]$delta[iter]))
-    mu_t.10 = cbind(yr[1]:yr[2],rscaled_t(n=10,df=9,s=model[[m]]$delta[iter]))
+    mu_t.9 = cbind(yr[1]:yr[2],rscaled_t(n=10,df=4,s=model[[m]]$delta[iter]))
+    mu_t.10 = cbind(yr[1]:yr[2],rscaled_t(n=10,df=4,s=model[[m]]$delta[iter]))
     teff.9 = teff.10 = cbind(dat$t,NA)
     for(t in 1:nrow(mu_t.9)){
       teff.9[teff.9[,1]==mu_t.9[t,1],2] = mu_t.9[t,2]
@@ -571,7 +571,7 @@ makeppt=function(m,dat){
 
 }
 
-ppt.yrrac = makeppt(m=2,dat=yrracdat)
+#ppt.yrrac = makeppt(m=2,dat=yrracdat)
 ppt.yrrdc = makeppt(m=4,dat=yrrdcdat)
 
 #generate exponentiated ppdt
@@ -587,7 +587,8 @@ yrrdc.m = lapply(yrrdc.exp, FUN= function(x)
   aggregate(x,by=list(yrrdcdat$t),mean))
 yrrdc.plt = lapply(yrrdc.m,FUN=function(x)
   apply(x[,2:ncol(x)],1,eff))
-
+yrrdc.med=lapply(yrrdc.m,FUN=function(x) 
+  apply(x[,2:ncol(x)],1,quantile, prob=.5))
 
 #@@@@@@@@@@@@@@@@@@@@@@@
 #unweighted ppd plot
@@ -600,7 +601,7 @@ par(mfrow=c(1,1),mar=c(3,3,3,3))
 #yl=range(c(ob.m.yrrac$x,yrrac.plt,yrrdc.plt,ob.m.yrrdc$x))
 yl=range(c(yrrdc.plt,ob.m.yrrdc$x))
 
-plot(1,type='n',ylim=yl,xlim=c(1,10),xaxt='n')#,log='y')
+plot(1,type='n',ylim=yl,xlim=c(1,10),xaxt='n',log='y')
 
 #polygon(c(1:10,rev(1:10)),
 #        c(yrrac.plt$icd9[2,1:10],rev(yrrac.plt$icd9[3,1:10])),
@@ -613,23 +614,27 @@ plot(1,type='n',ylim=yl,xlim=c(1,10),xaxt='n')#,log='y')
 #)
 
 
-polygon(c(1:10,rev(1:10)),
-        c(yrrdc.plt$icd9[2,1:10],rev(yrrdc.plt$icd9[3,1:10])),
-        border=NA, col=gray(0.75,alpha=.25)
+polygon(c(1:5,rev(1:5)),
+        c(yrrdc.plt$icd9[2,1:5],rev(yrrdc.plt$icd9[3,1:5])),
+        border=NA, col=gray(0.5,alpha=.25)
 )
+lines(5:10,yrrdc.plt$icd9[2,5:10],lty=2)
+lines(5:10,yrrdc.plt$icd9[3,5:10],lty=2)
 
-polygon(c(1:10,rev(1:10)),
-        c(yrrdc.plt$icd10[2,1:10],rev(yrrdc.plt$icd10[3,1:10])),
-        border=NA, col=gray(0.75,alpha=.25)
+polygon(c(6:10,rev(6:10)),
+        c(yrrdc.plt$icd10[2,6:10],rev(yrrdc.plt$icd10[3,6:10])),
+        border=NA, col=gray(0.5,alpha=.25)
 )
+lines(1:6,yrrdc.plt$icd10[2,1:6],lty=3)
+lines(1:6,yrrdc.plt$icd10[3,1:6],lty=3)
 
 
 #lines(1:10,plt.m.yrrac[1,1:10],type="l", lty=1)
 #lines(1:10,yrrac.plt$icd9[1,],type='l',lty=2)
 #lines(1:10,yrrac.plt$icd10[1,],type='l',lty=3)
 
-lines(1:10,yrrdc.plt$icd9[1,],type='l',lty=2)
-lines(1:10,yrrdc.plt$icd10[1,],type='l',lty=3)
+#lines(1:10,yrrdc.med$icd9,type='l',lty=2)
+#lines(1:10,yrrdc.med$icd10,type='l',lty=3)
 
 
 #lines(1:10,ob.m.yrrac$x[1:10],type="p",pch=15)
