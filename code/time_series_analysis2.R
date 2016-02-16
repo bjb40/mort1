@@ -200,8 +200,8 @@ rm(statadat,cells,cellsub,equals,i)
 #@@@@@@@@@@@@@@@@@@@
 chains=4
 
-iters = 1500
-#iters = 2500
+#iters = 1500
+iters = 2500
 #iters = 5000
 #iters = 7500
 #iters=10000
@@ -285,7 +285,7 @@ sink()
 rm(yrrac1,samp)
 
 yrrac2 = stan("bhm-changepoint.stan",
-              data=c('y','id','t','z','N','IDS','P','TDS','td','YRS','yrctr'),
+              data=yrracdat,
               seed=1404399575,
               warmup=burn,
               thin=thin,
@@ -341,7 +341,7 @@ save(yrrdcdat,file=paste0(outdir,'yrrdcdat.RData'))
 rm(yrrdcdat)
 
 yrrdc1 = stan("bhm.stan",
-              data=c('y','id','t','z','N','IDS','P','YRS','yrctr'),
+              data=yrrdcdat,
               warmup=burn,
               seed=1404399575,
               chains=chains,

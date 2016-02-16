@@ -58,7 +58,7 @@ model{
   sig ~ normal(0,5);
   zi ~ cauchy(0,5);
   delta ~ cauchy(0,10);
-  mu_t ~ student_t(4,0,delta);
+  mu_t ~ student_t(9,0,delta);
   L_Omega ~ lkj_corr_cholesky(1); //1 is equiv to uniform prior; >1 diagonal <1 high
 
 }
