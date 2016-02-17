@@ -66,10 +66,13 @@ delta=function(s,c,p){
   #output is a vecotr of 3 values, mean, and CI
   #not strictly correct; need a yrep or maybe \tilde(rep)
 
+  if(missing(p)){p=FALSE}
+  #print(length(p))
+  
   d = apply(s,1,FUN=function(x) x[2]-x[1])
-  if(missing(p)){p=F}
-  if(p==F){return(eff(d,c))}
-  if(p==T){return(printeff(d,c))}
+
+  if(p==FALSE){return(eff(d,c))}
+  if(p==TRUE){return(printeff(d,c))}
 }
 
 #scaled student t for robust functions
@@ -136,7 +139,7 @@ cat(printeff(model[[2]]$beta[,1]), '|')
 cat(printeff(model[[2]]$beta[,2]), '|')
 
 #bayesian pvalue ICD10 effect < ICD9 effect
-cat(delta(model[[2]]$beta,p=T),'|\n')
+#cat(delta(model[[2]]$beta,p=TRUE),'|\n')
 
 #conditional means of effects - gammas
 for(e in 1:16){
@@ -145,21 +148,27 @@ for(e in 1:16){
   #model 2 is three dimensional
   cat(printeff(model[[2]]$gamma[,1,e]), '|')
   cat(printeff(model[[2]]$gamma[,2,e]), '|')
-  cat(delta(model[[2]]$gamma[,,e],p=T),'|\n')
+  cat(delta(model[[2]]$gamma[,,e],p=TRUE),'|\n')
 
 }
 
 #variances
 
-####need to confirm terminology -- am I getting standard deviations or variances?
-
-cat('| Level 2 Var |')
+cat('| Level 2 Cell Var ($\\Sigma$) |')
 cat(printeff(model[[1]]$zi),'|')
 cat(printeff(model[[2]]$zi[,1]), '|')
 cat(printeff(model[[2]]$zi[,2]), '|')
-cat(delta(model[[2]]$zi,p=T),'|\n')
+cat(delta(model[[2]]$zi,p=TRUE),'|\n')
+cat(delta)
 
-cat('| Correlation of Level 2 Var |   -   |    |')
+cat('| Level 2 Cell Var ($\\delta^2$) |')
+cat(printeff(model[[1]]$delta),'|')
+cat(printeff(model[[2]]$delta), '|')
+cat(' |')
+cat(' |\n')
+
+
+cat('| Correlation of Level 2 Var (Corr($\\alpha_1,\\alpha_2$)) |   -   |    |')
 #calculated from L_Omega which is the lower cholesky of the correlation matrix
 # so it is L_Omega %*% t(L_Omega) on the upper or lower diagonal
 
@@ -198,7 +207,7 @@ cat(printeff(model[[4]]$beta[,1]), '|')
 cat(printeff(model[[4]]$beta[,2]), '|')
 
 #bayesian pvalue ICD10 effect < ICD9 effect
-cat(delta(model[[4]]$beta,p=T),'|\n')
+cat(delta(model[[4]]$beta,p=TRUE),'|\n')
 
 #conditional means of effects - gammas
 for(e in 1:16){
@@ -207,19 +216,24 @@ for(e in 1:16){
   #model 2 is three dimensional
   cat(printeff(model[[4]]$gamma[,1,e]), '|')
   cat(printeff(model[[4]]$gamma[,2,e]), '|')
-  cat(delta(model[[4]]$gamma[,,e],p=T),'|\n')
+  cat(delta(model[[4]]$gamma[,,e],p=TRUE),'|\n')
 
 }
 
 #variances
 
-####need to confirm terminology -- am I getting standard deviations or variances?
-
 cat('| Level 2 Var |')
 cat(printeff(model[[3]]$zi),'|')
 cat(printeff(model[[4]]$zi[,1]), '|')
 cat(printeff(model[[4]]$zi[,2]), '|')
-cat(delta(model[[4]]$zi,p=T),'|\n')
+cat(delta(model[[4]]$zi,p=TRUE),'|\n')
+
+cat('| Level 2 Cell Var ($\\delta^2$) |')
+cat(printeff(model[[1]]$delta),'|')
+cat(printeff(model[[2]]$delta), '|')
+cat(' |')
+cat(' |\n')
+
 
 cat('| Correlation of Level 2 Var |   -   |    |')
 #calculated from L_Omega which is the lower cholesky of the correlation matrix
@@ -594,56 +608,103 @@ yrrdc.med=lapply(yrrdc.m,FUN=function(x)
 #unweighted ppd plot
 #@@@@@@@@@@@@@@@@@@@@@@
 
-png(paste0(imdir,'series2.png'))
-par(mfrow=c(1,1),mar=c(3,3,3,3))
+#png(paste0(imdir,'series2.png'))
 
-
-#yl=range(c(ob.m.yrrac$x,yrrac.plt,yrrdc.plt,ob.m.yrrdc$x))
-yl=range(c(yrrdc.plt,ob.m.yrrdc$x))
-
-plot(1,type='n',ylim=yl,xlim=c(1,10),xaxt='n',log='y')
-
-polygon(c(1:10,rev(1:10)),
-        c(yrrac.plt$icd9[2,1:10],rev(yrrac.plt$icd9[3,1:10])),
-        border=NA, col=gray(0.5,alpha=.25)
-)
-
-polygon(c(1:10,rev(1:10)),
-        c(yrrac.plt$icd10[2,1:10],rev(yrrac.plt$icd10[3,1:10])),
-        border=NA, col=gray(0.5,alpha=.25)
-)
-
-
-polygon(c(1:5,rev(1:5)),
-        c(yrrdc.plt$icd9[2,1:5],rev(yrrdc.plt$icd9[3,1:5])),
-        border=NA, col=gray(0.5,alpha=.25)
-)
-lines(5:10,yrrdc.plt$icd9[2,5:10],lty=2)
-lines(5:10,yrrdc.plt$icd9[3,5:10],lty=2)
-
-polygon(c(6:10,rev(6:10)),
-        c(yrrdc.plt$icd10[2,6:10],rev(yrrdc.plt$icd10[3,6:10])),
-        border=NA, col=gray(0.5,alpha=.25)
-)
-lines(1:6,yrrdc.plt$icd10[2,1:6],lty=3)
-lines(1:6,yrrdc.plt$icd10[3,1:6],lty=3)
-
-
-#lines(1:10,plt.m.yrrac[1,1:10],type="l", lty=1)
-lines(1:10,yrrac.plt$icd9[1,],type='l',lty=2)
-lines(1:10,yrrac.plt$icd10[1,],type='l',lty=3)
-
-#lines(1:10,yrrdc.med$icd9,type='l',lty=2)
-#lines(1:10,yrrdc.med$icd10,type='l',lty=3)
-
-
-lines(1:10,ob.m.yrrac$x[1:10],type="p",pch=15)
-lines(1:10,ob.m.yrrdc$x[1:10],type='p',pch=16)
-
-abline(v=5.5)
+pdf(paste0(imdir,'series2.pdf'))
+ 
 
 dev.off()
 
+
+
+#@@@@@@@@@@@@@@@@@@@@@@@
+#unweighted spagheti plot
+#@@@@@@@@@@@@@@@@@@@@@@
+
+smp = lapply(yrrdc.m,FUN=function(x) sample(x[,2:ncol(x)],25))
+
+yl=range(c(smp,ob.m.yrrdc$x))
+plot(1,type='n',ylim=yl,xlim=c(1,10),xaxt='n')#,log='y')
+  apply(smp$icd9,2,FUN=function(x)
+      lines(1:5,x[1:5], col=gray(0.75))
+      #lines(5:10,x[5:10],col=gray(0.75),lty=2)
+    )
+  apply(smp$icd10,2,FUN=function(x)
+     lines(1:10,x,col=gray(0.75)))
+  #lines(1:10,yrrdc.smp$icd9[,1],col=gray(.9))
+  lines(1:10,ob.m.yrrdc$x[1:10],type='p',pch=16)
+
+  
+  #@@@@@@@@@@@@@@@@@@@
+  #Omnibus test of difference [difference in proportions?]
+  #@@@@@@@@@@@@@@@@@@@
+
+
+sink(paste0(outdir,'icd9-diff-pval.txt'))
+cat('###File collects info on bayesian p-values\n')  
+    
+#calculates difference between mean rates under ICD9 and ICD10
+tst=function(data){
+  mnrt = aggregate(data,by=list(yrracdat$td),mean)
+    return(mnrt$x[2]-mnrt$x[1])
+  }
+
+cat('\n\n@@@@@@@@@@@\nYRRAC\n@@@@@@@@@@@@@@@@\n\n')  
+mn.yrrac=tst(yrracdat$y)
+mn.ppdac = apply(model[[2]]$ppd,1,tst)
+#bayesian p-values
+cat('\nObserved difference in mean rates:\t\t',mn.yrrac)
+cat('\nPPD difference (over y):          \t\t')
+  printeff(mn.ppdac)
+cat('\nBayesian p-val for mean value YRRAC < 0:\t\t',
+        sum(mn.ppdac<0)/length(mn.ppdac)) 
+cat('\nBayesian p-val for mean value less than observed:\t',
+        sum(mn.ppdac<mn.yrrac)/length(mn.ppdac))
+
+#test including undertainty over years
+#prepare posterior draws WITHOUT projection and antejection
+mn.pptac = ppt.yrrac$icd9
+mn.pptac[,yrracdat$td==2] = ppt.yrrac$icd9[,yrracdat$td==2]
+mn.pptac=apply(mn.pptac,1,tst)
+#bayesian p-values
+cat('\n\nPPD difference (over y,tau):\t')
+  printeff(mn.pptac)
+cat('\nBayesian p-val for mean value YRRAC < 0:\t\t',
+    sum(mn.pptac<0)/length(mn.pptac)) 
+cat('\nBayesian p-val for mean value less than observed:\t',
+    sum(mn.pptac<mn.yrrac)/length(mn.pptac))
+
+
+cat('\n\n@@@@@@@@@@@\nYRRDC\n@@@@@@@@@@@@@@@@\n\n') 
+
+tst=function(data){
+  mnrt = aggregate(data,by=list(yrrdcdat$td),mean)
+  return(mnrt$x[2]-mnrt$x[1])
+}
+
+mn.yrrdc=tst(yrrdcdat$y)  
+mn.ppddc = apply(model[[4]]$ppd,1,tst)
+#bayesian p-value
+cat('\nObserved difference in mean rates:\t\t',mn.yrrdc)
+cat('\nPPD difference (over y):          \t\t')
+printeff(mn.ppddc)
+cat('\nBayesian p-val for mean value YRRDC < 0:\t\t',
+    sum(mn.ppddc<0)/length(mn.ppddc)) 
+cat('\nBayesian p-val for mean value less than observed:\t',
+    sum(mn.ppddc<mn.yrrac)/length(mn.ppddc))
+
+mn.pptdc = ppt.yrrdc$icd9
+mn.pptdc[,yrrdcdat$td==2] = ppt.yrrdc$icd9[,yrrdcdat$td==2]
+mn.pptdc=apply(mn.pptdc,1,tst)
+#bayesian p-values
+cat('\n\nPPD difference (over y,tau):\t')
+printeff(mn.pptdc)
+cat('\nBayesian p-val for mean value YRRDC < 0:\t\t',
+    sum(mn.pptdc<0)/length(mn.pptdc)) 
+cat('\nBayesian p-val for mean value less than observed:\t',
+    sum(mn.pptdc<mn.yrrac)/length(mn.pptdc))
+sink()
+  
 ########
 #age standardized plot---
 #no good (need individual year changes)
@@ -652,6 +713,8 @@ dev.off()
 
 #age standardized by weighting according to 1999
 wt = dat$tdeaths[dat$Years==0]/sum(dat$tdeaths[dat$Years==0])
+wtlim = dat$tdeaths[lim & dat$Years==0]/sum(dat$tdeaths[lim & dat$Years==0])
+
 #calculate weighted mean
 yrrac.wtm = lapply(yrrac.exp, FUN= function(x)
   aggregate(x,by=list(dat$Years),FUN=function(y) sum(y*wt)))
@@ -701,15 +764,15 @@ polygon(c(1:10,rev(1:10)),
 
 
 #lines(1:10,plt.m.yrrac[1,1:10],type="l", lty=1)
-#lines(1:10,yrrac.wtplt$icd9[1,],type='l',lty=2)
-#lines(1:10,yrrac.wtplt$icd10[1,],type='l',lty=3)
+lines(1:10,yrrac.wtplt$icd9[1,],type='l',lty=2)
+lines(1:10,yrrac.wtplt$icd10[1,],type='l',lty=3)
 
 lines(1:10,yrrdc.wtplt$icd9[1,],type='l',lty=2)
 lines(1:10,yrrdc.wtplt$icd10[1,],type='l',lty=3)
 
 
-#lines(1:10,ob.wtyrrac$x[1:10],type="p",pch=15)
-#lines(1:10,ob.wtyrrdc$x[1:10],type="p",pch=16)
+lines(1:10,ob.wtyrrac$x[1:10],type="p",pch=15)
+lines(1:10,ob.wtyrrdc$x[1:10],type="p",pch=16)
 
 dev.off()
 

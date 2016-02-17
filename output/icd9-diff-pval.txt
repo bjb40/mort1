@@ -1,0 +1,30 @@
+###File collects info on bayesian p-values
+
+
+@@@@@@@@@@@
+YRRAC
+@@@@@@@@@@@@@@@@
+
+
+Observed difference in mean rates:		 -0.1556297
+PPD difference (over y):          		-0.156<br>[-0.166,-0.145]
+Bayesian p-val for mean value YRRAC < 0:		 1
+Bayesian p-val for mean value less than observed:	 0.501
+
+PPD difference (over y,tau):	-0.106<br>[-0.175,-0.041]
+Bayesian p-val for mean value YRRAC < 0:		 0.9968
+Bayesian p-val for mean value less than observed:	 0.0612
+
+@@@@@@@@@@@
+YRRDC
+@@@@@@@@@@@@@@@@
+
+
+Observed difference in mean rates:		 -0.1286394
+PPD difference (over y):          		-0.129<br>[-0.151,-0.106]
+Bayesian p-val for mean value YRRDC < 0:		 1
+Bayesian p-val for mean value less than observed:	 0.007
+
+PPD difference (over y,tau):	-0.234<br>[-0.394,-0.076]
+Bayesian p-val for mean value YRRDC < 0:		 0.9918
+Bayesian p-val for mean value less than observed:	 0.8724
