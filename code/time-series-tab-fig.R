@@ -269,15 +269,15 @@ ageplot = function(mod){
 
     #yl=range(c(yrrac9,yrrac10))
     #print(yl)
-    yl=c(0.05,1)
+    yl=c(range(c(yrrac9,yrrac10)))
 
-    plot(1,type='n',ylim=yl,xlim=c(1,10),log='y')
+    plot(1,type='n',ylim=yl,xlim=c(1,10))
     o = 0 #offset for visibility
 
     polygon(c((1:10)-o,rev((1:10)-0)),c(yrrac9[2,],rev(yrrac9[3,])),
-            border=NA, col=gray(0.9))
+            border=NA, col=gray(0.75,alpha=.25))
     polygon(c((1:10)-o,rev((1:10)-0)),c(yrrac10[2,],rev(yrrac10[3,])),
-            border=NA, col=gray(0.9))
+            border=NA, col=gray(0.75,alpha=.25))
 
     lines((1:10)-o,yrrac9['mean',], type='p',pch=10)
     lines(yrrac9[1,])
@@ -289,12 +289,13 @@ ageplot = function(mod){
 
 }
 
-png(paste0(imdir,'ageplots.png'))
+#png(paste0(imdir,'ageplots.png'))
 
 par(mfrow=c(2,1), oma=c(3,3,1,1), mar=c(0.5,1.5,0,0), font.main=1)
 ageplot(2)
 ageplot(4)
-dev.off()
+
+#dev.off()
 
 d.all=apply(model[[2]]$gamma[,,1:10],3,delta)
 d.under = apply(model[[4]]$gamma[,,1:10],3,delta)
@@ -305,15 +306,15 @@ xl = range(c(d.all,d.under))
 png(paste0(imdir,'age_diff.png'))
 
 par(mfrow=c(1,1))
-plot(1,type='n',xlim=xl,ylim=c(1,10))
+plot(1,type='n',ylim=xl,xlim=c(1,10))
 
 o=0.1 #offset for display
 
-lines(d.all[1,],(1:10)-o, type='p',pch=15)
-segments(d.all[2,],(1:10)-o,d.all[3,],(1:10)-o)
-segments(d.under[2,],(1:10)+o,d.under[3,],(1:10)+o)
-lines(d.under[1,],(1:10)+o, type='p',pch=16)
-abline(v=0)
+lines((1:10)-o,d.all[1,], type='p',pch=15)
+  segments((1:10)-o,d.all[2,],(1:10)-o,d.all[3,])
+  segments((1:10)+o,d.under[2,],(1:10)+o,d.under[3,])
+lines((1:10)+o,d.under[1,], type='p',pch=16)
+abline(h=0)
 tick=axTicks(1) #get axis ticks from bottom side
 #plot logged rate
 axis(3,at=tick,labels=rnd(exp(tick),2))
@@ -332,7 +333,7 @@ tdeaths = aggregate(dat$tdeaths,by=list(dat$Years),sum)
 dat$wt=as.numeric(NA)
 for(y in unique(dat$Years)){
   print(y)
-  dat$wt[dat$Years==y] = dat$tdeaths[dat$Years==y]/tdeaths$x[tdeaths$Group.1 = y]
+  dat$wt[dat$Years==y] = dat$tdeaths[dat$Years==y]/tdeaths$x[tdeaths$Group.1 == y]
   }
 
 #summarize posterior draws
@@ -608,15 +609,129 @@ yrrdc.med=lapply(yrrdc.m,FUN=function(x)
 #unweighted ppd plot
 #@@@@@@@@@@@@@@@@@@@@@@
 
-#png(paste0(imdir,'series2.png'))
+png(paste0(imdir,'mean-rel-rates.png'),height=4,width=6.5,res=500,units='in')
 
-pdf(paste0(imdir,'series2.pdf'))
- 
+#pdf(paste0(imdir,'series2.pdf'))
 
-dev.off()
+gr = grey.colors(2,start=0.4,end=0.6,alpha=0.3)
+grdot = grey.colors(1,start=0.6,end=0.8)
+
+par(mfrow=c(1,1),mar=c(2,1,1,2),cex=.75)
 
 
+yl=range(c(ob.m.yrrac$x,yrrac.plt,yrrdc.plt,ob.m.yrrdc$x))
+#yl=range(c(yrrdc.plt,ob.m.yrrdc$x))
 
+plot(1,type='n',ylim=yl,xlim=c(0.5,10),xaxt='n',axes=FALSE)
+
+polygon(c(1:10,rev(1:10)),
+        c(yrrac.plt$icd9[2,1:10],rev(yrrac.plt$icd9[3,1:10])),
+        border=gr[2] ,col=gr[1]
+)
+
+polygon(c(1:10,rev(1:10)),
+        c(yrrac.plt$icd10[2,1:10],rev(yrrac.plt$icd10[3,1:10])),
+         border=gr[2],col=gr[2]
+)
+
+
+polygon(c(1:10,rev(1:10)),
+        c(yrrdc.plt$icd9[2,1:10],rev(yrrdc.plt$icd9[3,1:10])),
+        border=gr[1], col=gr[1]
+)
+
+
+polygon(c(1:10,rev(1:10)),
+        c(yrrdc.plt$icd10[2,1:10],rev(yrrdc.plt$icd10[3,1:10])),
+        border=gr[2], col=gr[2]
+)
+
+
+#lines(1:10,plt.m.yrrac[1,1:10],type="l", lty=1)
+lines(1:5,yrrac.plt$icd9[1,1:5],type='l',lty=1)
+lines(5:10,yrrac.plt$icd9[1,5:10],type='l',lty=2)
+
+lines(6:10,yrrac.plt$icd10[1,6:10],type='l',lty=1)
+lines(1:6,yrrac.plt$icd10[1,1:6],type='l',lty=2)
+
+
+lines(1:5,yrrdc.med$icd9[1:5],type='l',lty=1)
+lines(5:10,yrrdc.med$icd9[5:10],type='l',lty=2)
+
+lines(6:10,yrrdc.med$icd10[6:10],type='l',lty=1)
+lines(1:6,yrrdc.med$icd10[1:6],type='l',lty=2)
+
+#need to switch-up colors??
+lines(1:10,ob.m.yrrac$x[1:10],type="p",pch=16,col=grdot)
+lines(1:10,ob.m.yrrdc$x[1:10],type='p',pch=16,col=grdot)
+
+abline(v=5.5)
+axis(4)
+axis(1,at=1:10,labels=1994:2003) 
+
+#tick=axTicks(2) #get axis ticks from bottom side
+#plot logged rate
+#axis(4,at=tick,labels=rnd(log(tick),2))
+
+mtext('Logged Relative Rate',side=4,padj=3,cex=.7)
+
+text(0.5,.3,'All-Cause (RRA)',srt=90)
+text(0.75,yrrac.plt$icd9[1,1],'ICD-9', srt=90)
+text(0.75,yrrac.plt$icd10[1,1],'ICD-10', srt=90)
+
+text(0.5,.12,'Underlying-Cause (RRA)',srt=90)
+text(0.75,yrrdc.plt$icd9[1,1],'ICD-9', srt=90)
+text(0.75,yrrdc.plt$icd10[1,1],'ICD-10', srt=90)
+
+
+text(5.5,.36,'  ICD-10\n  Implemented',adj=0)
+
+legend('topright',c('Observed','Estimated','Projected'),
+       pch=c(16,NA,NA),
+       lty=c(NA,1,2),
+       col=c(grdot,'black','black'),
+       bty='n')
+
+dev.off() 
+
+
+###########
+###########
+# PPD age-group plots
+###########
+###########
+
+yrrac.agelist=rep(0,nrow(yrracdat$z))
+yrrdc.agelist=rep(0,nrow(yrrdcdat$z))
+for(a in 1:10){
+  yrrac.agelist[yrracdat$z[,a]==1] = a
+  yrrdc.agelist[yrracdat$z[,a]==1] = a
+  }
+
+#collect mean rates by age groups for 1999
+###YRRAC
+yrrac.agep= lapply(yrrac.exp,FUN=function(x)
+         aggregate(x[yrracdat$t==0,],by=list(yrrac.agelist[yrracdat$t==0]),mean))
+
+yaplt = lapply(yrrac.agep,FUN=function(x) apply(x,1,eff,c=.))
+
+plot(1:10,yaplt$icd9[1,],ylim=range(yaplt),type='l', lty=1,log='y')
+  segments(1:10,yaplt$icd9[2,],1:10,yaplt$icd9[3,])
+lines(1:10,yaplt$icd10[1,],ylim=range(yaplt),type='l', lty=2)
+  segments(1:10,yaplt$icd10[2,],1:10,yaplt$icd10[3,])
+
+###YRRDC
+yrrdc.agep= lapply(yrrdc.exp,FUN=function(x)
+    aggregate(x[yrrdcdat$t==0,],by=list(yrrdc.agelist[yrrdcdat$t==0]),mean))
+  
+  ydplt = lapply(yrrdc.agep,FUN=function(x) apply(x,1,eff,c=.84))
+  
+  plot(1:10,ydplt$icd9[1,],ylim=range(ydplt),type='l', lty=1,log='y')
+  segments(1:10,ydplt$icd9[2,],1:10,ydplt$icd9[3,])
+  lines(1:10,ydplt$icd10[1,],ylim=range(ydplt),type='l', lty=2)
+  segments(1:10,ydplt$icd10[2,],1:10,ydplt$icd10[3,])
+  
+  
 #@@@@@@@@@@@@@@@@@@@@@@@
 #unweighted spagheti plot
 #@@@@@@@@@@@@@@@@@@@@@@
