@@ -701,37 +701,61 @@ dev.off()
 ###########
 ###########
 
+png(paste0(imdir,'ageplot-99-ppd-84ci.png'),height=5.5,width=5.5,res=500,units='in')
+
 yrrac.agelist=rep(0,nrow(yrracdat$z))
 yrrdc.agelist=rep(0,nrow(yrrdcdat$z))
 for(a in 1:10){
   yrrac.agelist[yrracdat$z[,a]==1] = a
-  yrrdc.agelist[yrracdat$z[,a]==1] = a
+  yrrdc.agelist[yrrdcdat$z[,a]==1] = a
   }
 
 #collect mean rates by age groups for 1999
 ###YRRAC
+#par(mfrow=c(5,2))
+#for(year in unique(yrracdat$t)){
+par(mfrow=c(2,1), oma=c(3,2,1,1), mar=c(0.5,1.5,3,0), font.main=1)
+year = 0
 yrrac.agep= lapply(yrrac.exp,FUN=function(x)
-         aggregate(x[yrracdat$t==0,],by=list(yrrac.agelist[yrracdat$t==0]),mean))
+         aggregate(x[yrracdat$t==year,],by=list(yrrac.agelist[yrracdat$t==year]),mean))
 
-yaplt = lapply(yrrac.agep,FUN=function(x) apply(x,1,eff,c=.))
+yaplt = lapply(yrrac.agep,FUN=function(x) apply(x,1,eff,c=.84))
 
-plot(1:10,yaplt$icd9[1,],ylim=range(yaplt),type='l', lty=1,log='y')
-  segments(1:10,yaplt$icd9[2,],1:10,yaplt$icd9[3,])
-lines(1:10,yaplt$icd10[1,],ylim=range(yaplt),type='l', lty=2)
-  segments(1:10,yaplt$icd10[2,],1:10,yaplt$icd10[3,])
+plot(1:10,yaplt$icd9[1,],ylim=range(yaplt),type='p',pch=16,axes=FALSE,log='y')
+  arrows(1:10,yaplt$icd9[2,],1:10,yaplt$icd9[3,],angle=90,length=.1,code=3)
+lines(1:10,yaplt$icd10[1,],ylim=range(yaplt),type='p', pch=1)
+  arrows(1:10,yaplt$icd10[2,],1:10,yaplt$icd10[3,],angle=90,length=.1,code=3)
+
+  legend('topright',c('ICD9','ICD10'), pch=c(16,1), bty='n', cex=0.8)
+  mtext("All-Cause (RRA)", side=3, outer=F, line=0)
+  axis(2)
+
+ #} crosses over in 1999
 
 ###YRRDC
+  #par(mfrow=c(5,2))
+  
+#for(year in unique(yrrdcdat$t)){
+year = 0  
+  
 yrrdc.agep= lapply(yrrdc.exp,FUN=function(x)
-    aggregate(x[yrrdcdat$t==0,],by=list(yrrdc.agelist[yrrdcdat$t==0]),mean))
+    aggregate(x[yrrdcdat$t==year,],by=list(yrrdc.agelist[yrrdcdat$t==year]),mean))
   
   ydplt = lapply(yrrdc.agep,FUN=function(x) apply(x,1,eff,c=.84))
   
-  plot(1:10,ydplt$icd9[1,],ylim=range(ydplt),type='l', lty=1,log='y')
-  segments(1:10,ydplt$icd9[2,],1:10,ydplt$icd9[3,])
-  lines(1:10,ydplt$icd10[1,],ylim=range(ydplt),type='l', lty=2)
-  segments(1:10,ydplt$icd10[2,],1:10,ydplt$icd10[3,])
+  plot(1:10,ydplt$icd9[1,],ylim=range(ydplt),type='p', pch=16,log='y',axes=FALSE)
+  arrows(1:10,ydplt$icd9[2,],1:10,ydplt$icd9[3,],angle=90,length=.1,code=3)
+  lines(1:10,ydplt$icd10[1,],ylim=range(ydplt),type='p', pch=1)
+  arrows(1:10,ydplt$icd10[2,],1:10,ydplt$icd10[3,],angle=90,length=.1,code=3)
   
+  mtext("Underlying Cause (RRD)", side=3, outer=F, line=0)
+  axis(1,at=1:10, labels=c('40-44','45-49','50-54','55-59','60-64','65-69','70-74','75-79','80-84','85+'))
+  axis(2)
+  #legend('topright',legend=year+1999,bty='n')
+#}crosses over at 1997-2000
   
+dev.off()
+
 #@@@@@@@@@@@@@@@@@@@@@@@
 #unweighted spagheti plot
 #@@@@@@@@@@@@@@@@@@@@@@
