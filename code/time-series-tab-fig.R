@@ -609,7 +609,7 @@ yrrdc.med=lapply(yrrdc.m,FUN=function(x)
 #unweighted ppd plot
 #@@@@@@@@@@@@@@@@@@@@@@
 
-png(paste0(imdir,'mean-rel-rates.png'),height=4,width=6.5,res=500,units='in')
+png(paste0(imdir,'mean-rel-rates.png'),height=4.5,width=6.5,res=500,units='in')
 
 #pdf(paste0(imdir,'series2.pdf'))
 
@@ -679,7 +679,7 @@ text(0.5,.3,'All-Cause (RRA)',srt=90)
 text(0.75,yrrac.plt$icd9[1,1],'ICD-9', srt=90)
 text(0.75,yrrac.plt$icd10[1,1],'ICD-10', srt=90)
 
-text(0.5,.12,'Underlying-Cause (RRA)',srt=90)
+text(0.5,.12,'Underlying-Cause (RRD)',srt=90)
 text(0.75,yrrdc.plt$icd9[1,1],'ICD-9', srt=90)
 text(0.75,yrrdc.plt$icd10[1,1],'ICD-10', srt=90)
 
