@@ -253,12 +253,50 @@ sink()
 
 
 #@@@@@@@@@@@@@@@@@@@
+#Age-group ppd - male and female
+#@@@@@@@@@@@@@@@@@@@
+
+ppd_ac = t(model[[2]]$ppd)
+ppd_dc = model[[4]]$ppd
+
+#slices
+slices=unique(dat[,c('Female','Black')])
+blackmale = dat$Female==0 & dat$Black==1
+
+icd10=dat$Years>=0
+ages = colnames(dat[,c(5:14)])
+
+yl = range(eff(ppd_ac))
+
+par(mfrow=c(1,4))
+for(r in 1:nrow(slices)){
+  
+icd10.plts = icd9.plts = list()
+
+  isblack=dat[,'Black'] == slices[r,'Black']
+  isfe = dat[,'Female'] == slices[r,'Female']
+
+  for(a in seq_along(ages)){
+    icd10.plts[[a]] = eff(ppd_ac[isblack & isfe & icd10 & dat[,(a+4)]==1,])
+    icd9.plts[[a]] = eff(ppd_ac[isblack & isfe & icd10==FALSE & dat[,(a+4)]==1,])
+  }
+  
+  icd10.plts = simplify2array(icd10.plts,higher=TRUE)
+  icd9.plts =  simplify2array(icd9.plts,higher=TRUE)
+  plot(icd10.plts[1,],type='l',ylim=yl)
+    arrows((1:10),icd10.plts[2,],(1:10),icd10.plts[3,],angle=90,code=3,length=.1)
+  
+  lines(icd9.plts[1,],type='l', lty=2)
+    arrows((1:10),icd9.plts[2,],(1:10),icd9.plts[3,],angle=90,code=3,length=.1)
+  
+
+}
+
+#@@@@@@@@@@@@@@@@@@@
 #Age Specific Plot
 #@@@@@@@@@@@@@@@@@@@
 
 #add complexity and age for predicted effect of complexity and age
-
-
 ageplot = function(mod){
   #input approppiate model number; must be 2 or 4
     #pull effects and 84% intervals; include predicted effects fro complex = 1
@@ -271,23 +309,26 @@ ageplot = function(mod){
     #print(yl)
     yl=c(range(c(yrrac9,yrrac10)))
 
-    plot(1,type='n',ylim=yl,xlim=c(1,10))
+    plot(1,type='n',ylim=yl,xlim=c(1,10),log='y')
     o = 0 #offset for visibility
 
-    polygon(c((1:10)-o,rev((1:10)-0)),c(yrrac9[2,],rev(yrrac9[3,])),
-            border=NA, col=gray(0.75,alpha=.25))
-    polygon(c((1:10)-o,rev((1:10)-0)),c(yrrac10[2,],rev(yrrac10[3,])),
-            border=NA, col=gray(0.75,alpha=.25))
+    #polygon(c((1:10)-o,rev((1:10)-0)),c(yrrac9[2,],rev(yrrac9[3,])),
+    #        border=NA, col=gray(0.75,alpha=.25))
+    #polygon(c((1:10)-o,rev((1:10)-0)),c(yrrac10[2,],rev(yrrac10[3,])),
+    #        border=NA, col=gray(0.75,alpha=.25))
 
     lines((1:10)-o,yrrac9['mean',], type='p',pch=10)
-    lines(yrrac9[1,])
-    #arrows((1:10)-o,yrrac9[2,],(1:10)-o,yrrac9[3,],angle=90,code=3,length=.1)
+    #lines(yrrac9[1,])
+    arrows((1:10)-o,yrrac9[2,],(1:10)-o,yrrac9[3,],angle=90,code=3,length=.1)
 
     lines((1:10)+o,yrrac10['mean',], type='p',pch=16)
-    lines(yrrac10[1,],lty=2)
-    #arrows((1:10)+o,yrrac10[2,],(1:10)+o,yrrac10[3,],angle=90,code=3,length=.1)
+    #lines(yrrac10[1,],lty=2)
+    arrows((1:10)+o,yrrac10[2,],(1:10)+o,yrrac10[3,],angle=90,code=3,length=.1)
 
 }
+
+###EDIT HERE###
+
 
 #png(paste0(imdir,'ageplots.png'))
 
@@ -303,7 +344,7 @@ d.under = apply(model[[4]]$gamma[,,1:10],3,delta)
 xl = range(c(d.all,d.under))
 
 #need lables for age
-png(paste0(imdir,'age_diff.png'))
+#png(paste0(imdir,'age_diff.png'))
 
 par(mfrow=c(1,1))
 plot(1,type='n',ylim=xl,xlim=c(1,10))
@@ -320,7 +361,7 @@ tick=axTicks(1) #get axis ticks from bottom side
 axis(3,at=tick,labels=rnd(exp(tick),2))
 
 
-dev.off()
+#dev.off()
 
 #@@@@@@@@@@@
 #time series plot with ppd
