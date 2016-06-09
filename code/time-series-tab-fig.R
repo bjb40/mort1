@@ -254,42 +254,61 @@ sink()
 
 #@@@@@@@@@@@@@@@@@@@
 #Age-group ppd - male and female
+#would need reweighted to look right...
 #@@@@@@@@@@@@@@@@@@@
 
 ppd_ac = t(model[[2]]$ppd)
-ppd_dc = model[[4]]$ppd
+ppd_dc = t(model[[4]]$ppd)
 
 #slices
-slices=unique(dat[,c('Female','Black')])
-blackmale = dat$Female==0 & dat$Black==1
+#lim=is.finite(dat$yrrdc)
+lim=is.finite(dat$yrrac)
+slices=unique(dat[lim,c('Female','Black')])
+blackmale = dat$Female[lim]==0 & dat$Black[lim]==1
+complex = dat$Complex[lim]==1
 
-icd10=dat$Years>=0
-ages = colnames(dat[,c(5:14)])
+icd10=dat$Years[lim]>=0
+ages = colnames(dat[lim,c(5:14)])
 
-yl = range(eff(ppd_ac))
+#yl = range(eff(ppd_dc))
+
+#wt = dat$tdeaths/sum(dat$tdeaths)
 
 par(mfrow=c(1,4))
 for(r in 1:nrow(slices)){
   
 icd10.plts = icd9.plts = list()
 
-  isblack=dat[,'Black'] == slices[r,'Black']
-  isfe = dat[,'Female'] == slices[r,'Female']
+  isblack=dat[lim,'Black'] == slices[r,'Black']
+  isfe = dat[lim,'Female'] == slices[r,'Female']
 
   for(a in seq_along(ages)){
-    icd10.plts[[a]] = eff(ppd_ac[isblack & isfe & icd10 & dat[,(a+4)]==1,])
-    icd9.plts[[a]] = eff(ppd_ac[isblack & isfe & icd10==FALSE & dat[,(a+4)]==1,])
-  }
+    #weighted means - need to rescale so that it is 1
+    #weights by everything but the slices
+    
+    l10 = isblack & isfe & icd10 & dat[lim,ages[a]]==1
+    l9 = isblack & isfe & !icd10 & dat[lim,ages[a]]==1
+    
+    wt.9 = dat$tdeaths[l9]/sum(dat$tdeaths[l9])
+    wt.10 = dat$tdeaths[l10]/sum(dat$tdeaths[l10])
+    
+    tmp10 = apply(ppd_ac[l10,],2,FUN=function(x) x*wt.10)
+    icd10.plts[[a]] = eff(tmp10)
+    tmp9 = apply(ppd_ac[l9,],2,FUN=function(x) x*wt.9)
+    #print(c(sum(l9),dim(tmp9)))
+    icd9.plts[[a]] = eff(tmp9)
+    
+    #icd10.plts[[a]] = eff(ppd_dc[isblack & isfe & icd10 & dat[lim,(a+4)]==1,])
+    #icd9.plts[[a]] = eff(ppd_dc[isblack & isfe & icd10==FALSE & dat[lim,(a+4)]==1,])
+  }#end a  
   
   icd10.plts = simplify2array(icd10.plts,higher=TRUE)
   icd9.plts =  simplify2array(icd9.plts,higher=TRUE)
-  plot(icd10.plts[1,],type='l',ylim=yl)
-    arrows((1:10),icd10.plts[2,],(1:10),icd10.plts[3,],angle=90,code=3,length=.1)
+  plot(icd10.plts[1,],type='l')
+    #arrows((1:10),icd10.plts[2,],(1:10),icd10.plts[3,],angle=90,code=3,length=.1)
   
   lines(icd9.plts[1,],type='l', lty=2)
     arrows((1:10),icd9.plts[2,],(1:10),icd9.plts[3,],angle=90,code=3,length=.1)
-  
-
 }
 
 #@@@@@@@@@@@@@@@@@@@
