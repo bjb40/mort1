@@ -257,59 +257,65 @@ sink()
 #would need reweighted to look right...
 #@@@@@@@@@@@@@@@@@@@
 
-ppd_ac = t(model[[2]]$ppd)
-ppd_dc = t(model[[4]]$ppd)
-
 #slices
-#lim=is.finite(dat$yrrdc)
-lim=is.finite(dat$yrrac)
-slices=unique(dat[lim,c('Female','Black')])
-blackmale = dat$Female[lim]==0 & dat$Black[lim]==1
-complex = dat$Complex[lim]==1
+datuc = dat[is.finite(dat$yrrdc),]
+slices=unique(dat[,c('Female','Black')])
+slices.names = c('White Male','White Female','Black Male','Black Female')
+#visual inspection - need to triple check
+plts = array(0,dim=c(3,2,2,4))
+dimnames(plts)=list(est=c('mean','lcl','ucl'),
+                  dv=c('all-cause','underlying-cause'),
+                  icd=c('9','10'),dem=slices.names)
 
-icd10=dat$Years[lim]>=0
-ages = colnames(dat[lim,c(5:14)])
-
-#yl = range(eff(ppd_dc))
-
-#wt = dat$tdeaths/sum(dat$tdeaths)
-
-par(mfrow=c(1,4))
-for(r in 1:nrow(slices)){
+#helper function for limiting
+makelim = function(dt){
+  #input is dataframe
+  #returns fector of true/false for limits
+  return(list(Black=dt[,'Black'] == 1,
+              Female=dt[,'Female'] == 1,
+              icd10=dt$Years>=0,
+              tdeaths=dt$tdeaths))
   
-icd10.plts = icd9.plts = list()
-
-  isblack=dat[lim,'Black'] == slices[r,'Black']
-  isfe = dat[lim,'Female'] == slices[r,'Female']
-
-  for(a in seq_along(ages)){
-    #weighted means - need to rescale so that it is 1
-    #weights by everything but the slices
-    
-    l10 = isblack & isfe & icd10 & dat[lim,ages[a]]==1
-    l9 = isblack & isfe & !icd10 & dat[lim,ages[a]]==1
-    
-    wt.9 = dat$tdeaths[l9]/sum(dat$tdeaths[l9])
-    wt.10 = dat$tdeaths[l10]/sum(dat$tdeaths[l10])
-    
-    tmp10 = apply(ppd_ac[l10,],2,FUN=function(x) x*wt.10)
-    icd10.plts[[a]] = eff(tmp10)
-    tmp9 = apply(ppd_ac[l9,],2,FUN=function(x) x*wt.9)
-    #print(c(sum(l9),dim(tmp9)))
-    icd9.plts[[a]] = eff(tmp9)
-    
-    #icd10.plts[[a]] = eff(ppd_dc[isblack & isfe & icd10 & dat[lim,(a+4)]==1,])
-    #icd9.plts[[a]] = eff(ppd_dc[isblack & isfe & icd10==FALSE & dat[lim,(a+4)]==1,])
-  }#end a  
-  
-  icd10.plts = simplify2array(icd10.plts,higher=TRUE)
-  icd9.plts =  simplify2array(icd9.plts,higher=TRUE)
-  plot(icd10.plts[1,],type='l')
-    #arrows((1:10),icd10.plts[2,],(1:10),icd10.plts[3,],angle=90,code=3,length=.1)
-  
-  lines(icd9.plts[1,],type='l', lty=2)
-    arrows((1:10),icd9.plts[2,],(1:10),icd9.plts[3,],angle=90,code=3,length=.1)
 }
+
+ppd.ac = cbind(as.data.frame(makelim(dat)),t(model[[2]]$ppd))
+ppd.uc = cbind(as.data.frame(makelim(datuc)),t(model[[4]]$ppd))
+ppd=list(ac=ppd.ac,uc=ppd.uc); rm(ppd.ac,ppd.uc)
+
+#par(mfrow=c(1,4))
+for(r in 1:nrow(slices)){
+  for(dv in 1:2){
+      l9 = ppd[[dv]]$Black == slices[r,'Black'] &
+              ppd[[dv]]$Female == slices[r,'Female'] &
+              ! ppd[[dv]]$icd10
+      
+      l10 = ppd[[dv]]$Black == slices[r,'Black'] &
+            ppd[[dv]]$Female == slices[r,'Female'] &
+            ppd[[dv]]$icd10
+      
+      wt.9 = ppd[[dv]]$tdeaths[l9]/sum(ppd[[dv]]$tdeaths[l9])
+      wt.10 = ppd[[dv]]$tdeaths[l10]/sum(ppd[[dv]]$tdeaths[l10])
+        
+      tmp9 = apply(ppd[[dv]][l9,paste0(1:5000)],2,FUN=function(x) sum(x*wt.9))  
+      tmp10 = apply(ppd[[dv]][l10,paste0(1:5000)],2,FUN=function(x) sum(x*wt.10))
+
+          plts[,dv,2,r] = eff(tmp10)
+          plts[,dv,1,r] = eff(tmp9) 
+  }#end dv loop
+}#end dem (r) loop
+
+#prepare plot
+
+par(mfrow=c(2,1))
+#max=apply(plts,2,max)
+#print(max)
+rg=apply(plts,2,range)
+print(rg)
+mp.1 = barplot(plts[1,1,,],beside=TRUE,ylim=rg[,1])
+  arrows( mp.1,plts[2,1,,],mp.1,plts[3,1,,], code=3, angle=90,length=.1)
+
+mp.2 = barplot(plts[1,2,,],beside=TRUE,ylim=rg[,2])
+  arrows( mp.2,plts[2,2,,],mp.2,plts[3,2,,], code=3, angle=90,length=.1)
 
 #@@@@@@@@@@@@@@@@@@@
 #Age Specific Plot
