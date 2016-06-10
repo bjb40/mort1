@@ -309,13 +309,27 @@ for(r in 1:nrow(slices)){
 par(mfrow=c(2,1))
 #max=apply(plts,2,max)
 #print(max)
+#plts=exp(plts)
 rg=apply(plts,2,range)
-print(rg)
-mp.1 = barplot(plts[1,1,,],beside=TRUE,ylim=rg[,1])
-  arrows( mp.1,plts[2,1,,],mp.1,plts[3,1,,], code=3, angle=90,length=.1)
+print(rg);
+#pltslog = plts
 
-mp.2 = barplot(plts[1,2,,],beside=TRUE,ylim=rg[,2])
-  arrows( mp.2,plts[2,2,,],mp.2,plts[3,2,,], code=3, angle=90,length=.1)
+#plot saved manually (laptop)
+
+par(mfrow=c(2,1),mar=c(3,7,1,2),cex=.9)
+mp.1 = barplot(plts[1,1,,],beside=TRUE, horiz=TRUE
+               , xlim=c(0,max(rg))
+               ,xaxt='n'
+               #, legend.text=c('ICD-9','ICD-10')
+               , las=1,main="All Cause (RRA)")
+  arrows(plts[2,1,,],mp.1,plts[3,1,,],mp.1, code=3, angle=90,length=.01)
+  
+mp.2 = barplot(plts[1,2,,],beside=TRUE, horiz=TRUE
+              ,xlim=c(0,max(rg))
+              ,legend.text=c('ICD-9','ICD-10')
+              ,args.legend=c(x='bottomright',bty='n')
+              ,las=1,main="Underlying Cause (RRD)")
+  arrows( plts[2,2,,],mp.2,plts[3,2,,],mp.2, code=3, angle=90,length=.01)
 
 #@@@@@@@@@@@@@@@@@@@
 #Age Specific Plot
