@@ -995,3 +995,31 @@ lines(1:10,ob.wtyrrdc$x[1:10],type="p",pch=16)
 
 dev.off()
 
+
+######
+#complexity 
+#need to fix where it is centered
+######
+
+cmplx = matrix(0,4,5)
+colnames(cmplx) =  c('complex','icd10','mean','ll','ul')
+cmplx[,1] = c(1,1,0,0)
+cmplx[,2]=c(0,1,0,1)
+
+cmplx.ppd = list(cmplx,cmplx); names(cmplx.ppd)=c('ac','uc')
+
+#Calculate stuff all-cause
+cmplx.ppd$ac[1,3:5] = eff(ppd.yrrac.exp[dat$Complex==1 & dat$Years>=0,])
+eff(ppd.yrrac.exp[dat$Complex==1 & dat$Years<0,])
+
+eff(ppd.yrrac.exp[dat$Complex==0 & dat$Years>=0,])
+eff(ppd.yrrac.exp[dat$Complex==0 & dat$Years<0,])
+
+#underlying cause
+eff(ppd.yrrdc.exp[datuc$Complex==1 & datuc$Years>=0,])
+eff(ppd.yrrdc.exp[datuc$Complex==1 & datuc$Years<0,])
+
+eff(ppd.yrrdc.exp[datuc$Complex==0 & datuc$Years>=0,])
+eff(ppd.yrrdc.exp[datuc$Complex==0 & datuc$Years<0,])
+
+

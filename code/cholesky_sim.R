@@ -34,8 +34,8 @@ s = c(sd.x,sd.y)
 eta=matrix(rnorm(2000,mean=0,sd=1),2,1000)
 beta = t(matrix(mu,2,1000)) + t(diag(s) %*% L_Omega %*% eta)
 
-#NOTE THE EQUALITY FOR WHY THE BETA WORKS L_Omega is chol of correlation; L_chol is chor of cov
-print(diag(zi) %*% L_Omega)
+#NOTE THE EQUALITY FOR WHY THE BETA WORKS L_Omega is chol of correlation; L_chol is chol of cov
+print(diag(s) %*% L_Omega)
 print(L_chol)
 
 plot(mvdraw)
