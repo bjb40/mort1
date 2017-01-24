@@ -21,7 +21,9 @@
 .Rproj.user/
 #datasets
 *.dta
-.RData
+*.rda
+*.RData
+*.RdataTmp
 
 # os stuff #
 ###########
