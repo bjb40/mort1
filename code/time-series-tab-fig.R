@@ -282,6 +282,16 @@ ppd.ac = cbind(as.data.frame(makelim(dat)),t(model[[2]]$ppd))
 ppd.uc = cbind(as.data.frame(makelim(datuc)),t(model[[4]]$ppd))
 ppd=list(ac=ppd.ac,uc=ppd.uc); rm(ppd.ac,ppd.uc)
 
+deltas=data.frame(dv=integer(),
+                  mean=double(),
+                  upper=double(),
+                  lower=double(),
+                  Female=integer(),
+                  Black=integer())
+
+#exponentiate to put on ratio scale
+#ppd=exp(ppd)
+
 #par(mfrow=c(1,4))
 for(r in 1:nrow(slices)){
   for(dv in 1:2){
@@ -299,17 +309,118 @@ for(r in 1:nrow(slices)){
       tmp9 = apply(ppd[[dv]][l9,paste0(1:5000)],2,FUN=function(x) sum(x*wt.9))  
       tmp10 = apply(ppd[[dv]][l10,paste0(1:5000)],2,FUN=function(x) sum(x*wt.10))
 
+      tmpdeltas=eff(exp(tmp10)-exp(tmp9))
+      names(tmpdeltas) = c('mean','lower','upper')
+      #print(tmpdeltas)
+      tmpdeltas$dv = dv
+      #print(names(ppd)[dv])
+      tmpdeltas$Female = slices[r,'Female']
+      tmpdeltas$Black = slices[r,'Black']
+      
+      deltas = rbind(deltas,tmpdeltas)
+      
+      
+      
           plts[,dv,2,r] = eff(tmp10)
           plts[,dv,1,r] = eff(tmp9) 
   }#end dv loop
 }#end dem (r) loop
 
-#prepare plot
+#print(deltas)
+deltas$dv = factor(deltas$dv,labels=c('All Cause','Underlying Cause'))
+deltas$Black = factor(deltas$Black,labels=c('White','Black'))
+deltas$Female = factor(deltas$Female,labels=c('Male','Female'))
 
+
+#prepare plots
+library(ggplot2)
+
+#deltas plot (1/24/2017)
+#####THIS ONE
+p = ggplot(deltas,aes(x=Female,y=mean))
+  p + geom_point() + 
+      geom_errorbar(aes(ymin=lower,ymax=upper),width=0.1) +
+      facet_grid(.~Black+dv)
+
+library(dplyr)
+  
+#omnibus -- calculate PROPORITON CHANGE BETWEEN ICD9 AND ICD 10 AS % DECLINE
+  
+wt.ac = ppd[['ac']] %>% 
+    select(-Black, -Female) %>%  
+    group_by(icd10) %>% 
+    mutate(wt=tdeaths/sum(tdeaths)) %>%
+    mutate_each(funs(.*wt),-tdeaths,-icd10,-wt) %>%
+    ungroup
+
+
+print(sum(wt.ac$wt)) #should equal 2
+
+sum.ac = wt.ac %>% 
+         group_by(icd10) %>% 
+         summarise_each(funs(sum)) %>%
+         select(-tdeaths, -wt) %>%
+         ungroup
+
+#tst=as.data.frame(t(sum.ac[,2:5001]))
+#ggplot(exp(tst),aes(x=V1,y=V2)) + geom_point()
+
+
+#bayesian pval
+#sum(exp(sum.ac[2,2:5001])-exp(sum.ac[1,2:5001])>0)/5000
+
+
+wt.uc = ppd[['uc']] %>% 
+  select(-Black, -Female) %>%  
+  group_by(icd10) %>% 
+  mutate(wt=tdeaths/sum(tdeaths)) %>%
+  mutate_each(funs(.*wt),-tdeaths,-icd10,-wt) %>%
+  ungroup
+
+print(sum(wt.uc$wt)) #should equal 2
+
+sum.uc = wt.uc %>% 
+  group_by(icd10) %>% 
+  summarise_each(funs(sum)) %>%
+  select(-tdeaths, -wt) %>%
+  ungroup
+
+
+delta.ac =as.numeric(exp(sum.ac[2,2:5001])-exp(sum.ac[1,2:5001])) 
+scaled.ac=delta.ac/as.numeric(exp(sum.ac[2,2:5001]))
+eff(scaled.ac) #proportion change ac
+
+delta.uc=as.numeric(exp(sum.uc[2,2:5001])-exp(sum.uc[1,2:5001]))
+scaled.uc=delta.uc/as.numeric(exp(sum.uc[2,2:5001]))
+eff(scaled.uc)
+
+#pval 
+(sum(scaled.ac>scaled.uc)/5000)*2
+all.scaled=data.frame(ac=scaled.ac,uc=scaled.uc)
+all.delta=data.frame(ac=delta.ac,uc=delta.uc)
+actual.ac=t(exp(sum.ac[,2:5001])); colnames(actual.ac) = c('ic9','icd10')
+actual.uc=t(exp(sum.uc[,2:5001])); colnames(actual.uc) = c('ic9','icd10')
+
+library(reshape2)
+
+#View(melt(all.scaled))
+
+#mention the point changes
+ggplot(melt(all.scaled)) + geom_density(aes(x=value,fill=variable),alpha=.35)
+
+#THIS ONE                      
+ggplot(melt(all.delta)) + geom_density(aes(x=value,fill=variable),alpha=.35)
+
+
+  #tmp9 = apply(ppd[[dv]][l9,paste0(1:5000)],2,FUN=function(x) sum(x*wt.9))  
+  #tmp10 = apply(ppd[[dv]][l10,paste0(1:5000)],2,FUN=function(x) sum(x*wt.10))
+  
+  
+  
 par(mfrow=c(2,1))
 #max=apply(plts,2,max)
 #print(max)
-#plts=exp(plts)
+plts=exp(plts)
 rg=apply(plts,2,range)
 print(rg);
 #pltslog = plts
@@ -366,7 +477,6 @@ ageplot = function(mod){
 
 }
 
-###EDIT HERE###
 
 
 #png(paste0(imdir,'ageplots.png'))
