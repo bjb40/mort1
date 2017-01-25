@@ -58,21 +58,31 @@ testlower = function(s){
 }
 
 #calculate CI of difference in estimated effects
-delta=function(s,c,p){
+delta=function(s,c,p,pval){
   #returns distribution of the difference between ICD9 and ICD10 effects
   #Input: s = posterior samples, with column1 from ICD9 and column 2 from ICD10
   #input: c = confidence value (see function eff for information)
   #input: p is True or false for printing
+  #input: pval is TRUE or FALSE for exporting pvalue of difference (2 tail bayesian)
   #output is a vecotr of 3 values, mean, and CI
   #not strictly correct; need a yrep or maybe \tilde(rep)
 
   if(missing(p)){p=FALSE}
+  if(missing(pval)){pval=FALSE}
   #print(length(p))
   
   d = apply(s,1,FUN=function(x) x[2]-x[1])
 
-  if(p==FALSE){return(eff(d,c))}
-  if(p==TRUE){return(printeff(d,c))}
+  
+  if(p==FALSE){r=eff(d,c)}
+  if(p==TRUE){r=printeff(d,c)}
+  
+  if(pval){
+    pvals=(min(sum(d>0),sum(d<0))/5000)*2
+    r[4] = pvals; names(r)[4] = 'pval'
+  }
+  
+  return(r)
 }
 
 #scaled student t for robust functions
@@ -466,6 +476,13 @@ mp.2 = barplot(plts[1,2,,],beside=TRUE, horiz=TRUE
 #Age Specific Plot
 #@@@@@@@@@@@@@@@@@@@
 
+  #calculate significance levels of differences
+  
+d.all=apply(model[[2]]$gamma[,,1:10],3,delta,pval=TRUE)
+  all.sig=unlist(lapply(d.all['pval',],sig))
+d.under = apply(model[[4]]$gamma[,,1:10],3,delta,pval=TRUE)
+  under.sig=unlist(lapply(d.under['pval',],sig))
+  
 #add complexity and age for predicted effect of complexity and age
 ageplot = function(mod){
   #input approppiate model number; must be 2 or 4
@@ -474,12 +491,16 @@ ageplot = function(mod){
     #complex = matrix(0,2,2)
     yrrac9 = apply(model[[mod]]$gamma[,1,1:10],2,FUN=function(x) eff(exp(x), c=.84))
     yrrac10 = apply(model[[mod]]$gamma[,2,1:10],2,FUN=function(x) eff(exp(x), c=.84))
-
+    deltas=apply(exp(model[[mod]]$gamma[,,1:10]),3,delta,pval=TRUE)
+    sigs=unlist(lapply(deltas['pval',],sig))
+    sigs[sigs=='+  '] = '   ' #get rid of 0.1 level
+    sigs=trimws(sigs) #trim whitespace for centering
+    
     #yl=range(c(yrrac9,yrrac10))
     #print(yl)
     yl=c(range(c(yrrac9,yrrac10)))
 
-    plot(1,type='n',ylim=yl,xlim=c(1,10),log='y')
+    plot(1,type='n',ylim=yl,xlim=c(0.5,10.5),log='y',axes=FALSE)
     o = 0 #offset for visibility
 
     #polygon(c((1:10)-o,rev((1:10)-0)),c(yrrac9[2,],rev(yrrac9[3,])),
@@ -487,28 +508,41 @@ ageplot = function(mod){
     #polygon(c((1:10)-o,rev((1:10)-0)),c(yrrac10[2,],rev(yrrac10[3,])),
     #        border=NA, col=gray(0.75,alpha=.25))
 
-    lines((1:10)-o,yrrac9['mean',], type='p',pch=10)
-    lines(yrrac9[1,])
+    #lines((1:10)-o,yrrac9['mean',], type='p',pch=10)
+    
+    segments(0.5:9.5,yrrac9['mean',],1.5:10.5,yrrac9['mean',])
+    text(1:10,
+         (yrrac10['mean',])-(deltas['mean',]/2),
+         labels=sigs,cex=.6)
+    
+    #lines(yrrac9[1,])
     #arrows((1:10)-o,yrrac9[2,],(1:10)-o,yrrac9[3,],angle=90,code=3,length=.1)
 
-    lines((1:10)+o,yrrac10['mean',], type='p',pch=16)
-    lines(yrrac10[1,],lty=2)
+    #lines((1:10)+o,yrrac10['mean',], type='p',pch=16)
+    segments(0.5:9.5,yrrac10['mean',],1.5:10.5,yrrac10['mean',],lty=2)
+    #lines(yrrac10[1,],lty=2)
     #arrows((1:10)+o,yrrac10[2,],(1:10)+o,yrrac10[3,],angle=90,code=3,length=.1)
 
 }
 
 
 
-#png(paste0(imdir,'ageplots.png'))
+pdf(paste0(imdir,'ageplots.pdf'))
 
-par(mfrow=c(2,1), oma=c(3,3,1,1), mar=c(0.5,1.5,0,0), font.main=1)
+par(mfrow=c(2,1), oma=c(0,0,0,0), mar=c(2,2,2,0), font.main=1)
 ageplot(2)
+  legend('topright',bty='n',lty=c(1,2),legend=c('ICD-9','ICD-10'))
+  title(main='All Cause',outer=FALSE)
+  axis(2)
+  
 ageplot(4)
+  title(main='Underlying Cause')
+  axis(2)
+  axis(1,labels=paste(seq(40,85,by=5),seq(44,89,by=5),sep='-'), 
+       at=1:10)  
 
-#dev.off()
+dev.off()
 
-d.all=apply(model[[2]]$gamma[,,1:10],3,delta)
-d.under = apply(model[[4]]$gamma[,,1:10],3,delta)
 
 xl = range(c(d.all,d.under))
 
