@@ -336,12 +336,19 @@ deltas$Female = factor(deltas$Female,labels=c('Male','Female'))
 library(ggplot2)
 
 #deltas plot (1/24/2017)
-#####THIS ONE
+
+pdf(paste0(imdir,'dem_deltas.pdf'))
+
 p = ggplot(deltas,aes(x=Female,y=mean))
   p + geom_point() + 
       geom_errorbar(aes(ymin=lower,ymax=upper),width=0.1) +
-      facet_grid(.~Black+dv)
+      facet_grid(.~Black+dv) + 
+      theme_bw() + 
+      theme(axis.title.y=element_blank(),
+            axis.title.x=element_blank())
 
+dev.off()  
+  
 library(dplyr)
   
 #omnibus -- calculate PROPORITON CHANGE BETWEEN ICD9 AND ICD 10 AS % DECLINE
@@ -409,8 +416,21 @@ library(reshape2)
 ggplot(melt(all.scaled)) + geom_density(aes(x=value,fill=variable),alpha=.35)
 
 #THIS ONE                      
-ggplot(melt(all.delta)) + geom_density(aes(x=value,fill=variable),alpha=.35)
+colnames(all.delta) = c("All Cause","Underlying Cause")
 
+pdf(paste0(imdir,'delta_density.pdf'))
+
+ggplot(melt(all.delta)) + 
+  geom_density(aes(x=value,fill=variable),alpha=.35) +
+  theme_bw() + 
+  scale_fill_grey(guide=guide_legend(title=NULL)) +
+  theme(axis.title.y=element_blank(),
+        axis.ticks.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.title.x=element_blank(),
+        legend.position='bottom') 
+
+dev.off()
 
   #tmp9 = apply(ppd[[dv]][l9,paste0(1:5000)],2,FUN=function(x) sum(x*wt.9))  
   #tmp10 = apply(ppd[[dv]][l10,paste0(1:5000)],2,FUN=function(x) sum(x*wt.10))
@@ -449,7 +469,7 @@ mp.2 = barplot(plts[1,2,,],beside=TRUE, horiz=TRUE
 #add complexity and age for predicted effect of complexity and age
 ageplot = function(mod){
   #input approppiate model number; must be 2 or 4
-    #pull effects and 84% intervals; include predicted effects fro complex = 1
+    #pull effects and 84% intervals; include predicted effects for complex = 1
     complex = model[[mod]]$gamma[,,12]
     #complex = matrix(0,2,2)
     yrrac9 = apply(model[[mod]]$gamma[,1,1:10],2,FUN=function(x) eff(exp(x), c=.84))
@@ -468,12 +488,12 @@ ageplot = function(mod){
     #        border=NA, col=gray(0.75,alpha=.25))
 
     lines((1:10)-o,yrrac9['mean',], type='p',pch=10)
-    #lines(yrrac9[1,])
-    arrows((1:10)-o,yrrac9[2,],(1:10)-o,yrrac9[3,],angle=90,code=3,length=.1)
+    lines(yrrac9[1,])
+    #arrows((1:10)-o,yrrac9[2,],(1:10)-o,yrrac9[3,],angle=90,code=3,length=.1)
 
     lines((1:10)+o,yrrac10['mean',], type='p',pch=16)
-    #lines(yrrac10[1,],lty=2)
-    arrows((1:10)+o,yrrac10[2,],(1:10)+o,yrrac10[3,],angle=90,code=3,length=.1)
+    lines(yrrac10[1,],lty=2)
+    #arrows((1:10)+o,yrrac10[2,],(1:10)+o,yrrac10[3,],angle=90,code=3,length=.1)
 
 }
 
@@ -492,6 +512,7 @@ d.under = apply(model[[4]]$gamma[,,1:10],3,delta)
 
 xl = range(c(d.all,d.under))
 
+#update this one!!
 #need lables for age
 #png(paste0(imdir,'age_diff.png'))
 
