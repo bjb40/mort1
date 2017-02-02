@@ -20,9 +20,39 @@ imdir = "H:/projects/mort1/img~/"
 #@@@@
 
 #prepared in SAS per notes
+#a = accidents (external)
+#n = noncommunicable (chronic)
+#c = communicaable (acute)
+#u = unassigned/residual
 raw = read.csv(paste(rawdir,"morttab.csv",sep=''))
 #remove 2004-2010 for balanced timeframe before and after transition
 raw = raw[raw[,'year']<2004,]
+
+#proportions
+library(dplyr)
+library(reshape2)
+
+##generate descriptive statistics for 40+
+raw$agegrp=cut(raw$ager,breaks=c(seq(40,85,by=5),150),right=FALSE)
+
+
+#include total N, and N "c" and "u"
+describe = raw %>% 
+  group_by(ICD10,race,pd,complex,female)  %>%
+  mutate(uc.tot = uc_c_Sum + uc_n_Sum + uc_a_Sum + uc_u_Sum,
+         ac.tot = any_c_Sum + any_n_Sum + any_a_Sum + any_u_Sum,
+         uc.acute = uc_c_Sum, uc.chronic = uc_n_Sum,
+         ac.acute = any_c_Sum, uc.acute = any_n_Sum) %>% 
+  select(-ager,-year,-matches('Sum'),-agegrp) %>% 
+  summarize_each(funs(sum)) %>%
+  ungroup
+
+##build table
+
+t=describe %>% group_by(ICD10,female) %>% 
+  summarize_each(funs(sum)) %>%
+  select(matches('[auc]+\\.')) %>%
+  ungroup
 
 #recodes
 a_c = raw$any_c_Sum
