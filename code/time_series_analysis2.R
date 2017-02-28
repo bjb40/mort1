@@ -37,22 +37,91 @@ raw$agegrp=cut(raw$ager,breaks=c(seq(40,85,by=5),150),right=FALSE)
 
 
 #include total N, and N "c" and "u"
+#uc contains all deaths because each death is assigned one mutually
+#exclusive category
 describe = raw %>% 
   group_by(ICD10,race,pd,complex,female)  %>%
-  mutate(uc.tot = uc_c_Sum + uc_n_Sum + uc_a_Sum + uc_u_Sum,
-         ac.tot = any_c_Sum + any_n_Sum + any_a_Sum + any_u_Sum,
+  mutate(tot = uc_c_Sum + uc_n_Sum + uc_a_Sum + uc_u_Sum,
          uc.acute = uc_c_Sum, uc.chronic = uc_n_Sum,
-         ac.acute = any_c_Sum, uc.acute = any_n_Sum) %>% 
+         uc.external = uc_a_Sum, uc.residual = uc_u_Sum,
+         ac.acute = any_c_Sum, ac.chronic = any_n_Sum,
+         ac.external = any_a_Sum, ac.residual = any_u_Sum) %>% 
   select(-ager,-year,-matches('Sum'),-agegrp) %>% 
   summarize_each(funs(sum)) %>%
+  ungroup %>%
+  group_by(ICD10) %>% mutate(all.icddeaths=sum(tot)) %>%
   ungroup
 
-##build table
+##build descriptives table -- just put in by hand...
 
-t=describe %>% group_by(ICD10,female) %>% 
-  summarize_each(funs(sum)) %>%
-  select(matches('[auc]+\\.')) %>%
+props=describe %>% group_by(ICD10) %>% 
+  summarize_each(funs(sum),tot,matches('[auc]+\\.')) %>% 
+  mutate_each(funs(rnd(./tot)),-ICD10,-tot) %>%
   ungroup
+
+print(t(props))
+
+describe$race = factor(describe$race,labels=c('white','black','other'))
+describe$pd= factor(describe$pd,labels=c('Hospital','Long-term Care','Home','Other'))
+
+#helper function building proprortions from the frequencies
+describe.props = function(...){
+  props = describe %>% group_by_('ICD10',...) %>%
+     summarize_each(funs(sum),tot) %>% group_by(ICD10) %>% mutate(tot=rnd(tot/sum(tot)))
+  return(props%>%ungroup)
+}
+
+for(i in c('race','female','pd','complex')){
+  print(describe.props(i))
+}
+
+race.describe = describe %>% 
+  filter(race %in% c('black','white')) %>%
+  group_by(female,race,complex,pd) %>% 
+  summarize_each(funs(sum),tot) %>%
+  group_by(female,race) %>% mutate(tot=rnd(tot/sum(tot)))
+
+race.describe$race = factor(race.describe$race,labels=c('White','Black'))
+race.describe$female = factor(race.describe$female,labels=c('Female','Male'))
+race.describe$complex = factor(race.describe$complex,labels=c('Not Complex','Complex'))
+
+ggplot(race.describe, aes(y=tot,x=complex,fill=pd)) +
+  geom_bar(stat='identity',position='stack') + 
+  facet_grid(.~race+female) 
+
+#average age:
+ages = raw %>% group_by(ager,ICD10) %>%
+  mutate(tot = uc_c_Sum + uc_n_Sum + uc_a_Sum + uc_u_Sum) %>% 
+  select(tot,ager,ICD10) 
+
+ages %>% group_by(ICD10) %>% 
+  summarize(wtmn=funs(weighted.mean(.,tot)),ager)
+
+print(
+ages %>% group_by(ICD10) %>% mutate(wt = tot/sum(tot)) %>%
+  summarize(wt.mn=weighted.mean(ager,wt),
+            wt.sd=sqrt(sum(wt*(ager-wt.mn)^2)),
+            mn=mean(ager), sd=sd(ager),
+            wts = sum(wt)) #wt should be 1; just double-checks weight
+  
+)
+
+#proportions by race and gender
+cmplx=describe %>% filter(race=='black' | race=='white') %>%
+  group_by(female,race,ICD10,pd) %>% 
+  summarize_each(funs(sum),tot) %>% 
+  group_by(female,race,ICD10) %>% mutate(tot=tot/sum(tot))
+
+#View(cmplx)
+cmplx$ICD10=factor(cmplx$ICD10,labels=c('Icd-9','Icd-10')) #RIGHT MAPPING?
+cmplx$female=factor(cmplx$female,labels=c('Male','Female')) #RIGHT MAPPING?
+#cmplx$complex=factor(cmplx$complex,labels=c('2 or fewer conditions','More than 2')) #RIGHT MAPPING?
+cmplx$pd=factor(cmplx$pd,labels=c('Hospital','Home','LT Care','Other'))
+
+ggplot(cmplx, aes(x=pd,y=tot)) + 
+  geom_bar(stat='identity') + 
+  facet_grid(race~female+ICD10,as.table=TRUE) 
+
 
 #recodes
 a_c = raw$any_c_Sum

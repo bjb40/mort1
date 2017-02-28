@@ -1,7 +1,7 @@
 #dev R 3.2.3; Rstan 2.8.2; RStudio 0.99.0467; Stan 2.8.0
 #figures and tables for changepoint model
 #Bryce Bartlett
-#2/2016
+#2/2016 - revised 2/2017
 
 
 rm(list=ls())
@@ -137,7 +137,6 @@ cat('\n\nTable __. Bayesian regression estimates on logged Relative Rate
 
 
 #need to check with scott on the "pvalue" test, and read is simulation articles...
-#need to integrate uncertainty in measure out of this, probably to get a a \tilde(y)
 
 cat('|      |  Model 1 | Model 2-ICD9 | Model 2-ICD10 | M2: ICD10-ICD9 |\n')
 cat('|:-----|---------:|-------------:|--------------:|--------------------------------:|\n')
@@ -147,6 +146,8 @@ cat('| Year | ')
 cat(printeff(model[[1]]$beta), '|')
 cat(printeff(model[[2]]$beta[,1]), '|')
 cat(printeff(model[[2]]$beta[,2]), '|')
+
+cat('\n')
 
 #bayesian pvalue ICD10 effect < ICD9 effect
 #cat(delta(model[[2]]$beta,p=TRUE),'|\n')
@@ -296,6 +297,9 @@ deltas=data.frame(dv=integer(),
                   mean=double(),
                   upper=double(),
                   lower=double(),
+                  mean.eff=double(),
+                  upper.eff=double(),
+                  lower.eff=double(),
                   Female=integer(),
                   Black=integer())
 
@@ -315,12 +319,18 @@ for(r in 1:nrow(slices)){
       
       wt.9 = ppd[[dv]]$tdeaths[l9]/sum(ppd[[dv]]$tdeaths[l9])
       wt.10 = ppd[[dv]]$tdeaths[l10]/sum(ppd[[dv]]$tdeaths[l10])
+      
+      rel.10 = sum(ppd[[dv]]$tdeaths[l10])/sum(ppd[[dv]]$tdeaths[l9 | l10])
+      rel.9 = 1-rel.10
         
       tmp9 = apply(ppd[[dv]][l9,paste0(1:5000)],2,FUN=function(x) sum(x*wt.9))  
       tmp10 = apply(ppd[[dv]][l10,paste0(1:5000)],2,FUN=function(x) sum(x*wt.10))
 
       tmpdeltas=eff(exp(tmp10)-exp(tmp9))
+      tmpeff = eff(exp(tmp10*rel.10 + tmp9*rel.10))
+      names(tmpeff) = c('mean.eff','lower.eff','upper.eff')
       names(tmpdeltas) = c('mean','lower','upper')
+      tmpdeltas=c(tmpdeltas,tmpeff)
       #print(tmpdeltas)
       tmpdeltas$dv = dv
       #print(names(ppd)[dv])
@@ -337,7 +347,7 @@ for(r in 1:nrow(slices)){
 }#end dem (r) loop
 
 #print(deltas)
-deltas$dv = factor(deltas$dv,labels=c('All Cause','Underlying Cause'))
+deltas$dv = factor(deltas$dv,labels=c('Any Mention','Underlying Cause'))
 deltas$Black = factor(deltas$Black,labels=c('White','Black'))
 deltas$Female = factor(deltas$Female,labels=c('Male','Female'))
 
@@ -358,9 +368,118 @@ p = ggplot(deltas,aes(x=Female,y=mean))
             axis.title.x=element_blank())
 
 dev.off()  
+
+
+dodge=position_dodge(width=0.9)
+ggplot(deltas,aes(x=Female,y=mean.eff,fill=Black)) +
+  geom_bar(stat='identity',position=dodge) +  
+  scale_fill_grey(start=.9,end=.5)+
+  guides(fill=guide_legend(title=element_blank()))+
+  theme_bw() + 
+  facet_grid(~dv) +
+  geom_errorbar(aes(ymin=lower.eff,ymax=upper.eff),width=0.5,position=dodge) +
+  theme(axis.title.x=element_blank()) + ylab('Relative Rates')
+
+ggsave(paste0(imdir,'dem_absolute.pdf'))
+
+#plot deltas black and female (gamma effect only) ...
+
+drawdeltas=function(modnums,varnum){
+dem.effs = rbind(
+  sapply(modnums,FUN=function(m)
+    c(
+      delta(model[[m]]$gamma[,,varnum],pval=TRUE),'model'=m,'var'=varnum)
+      )
+)
+
+return(dem.effs)
+
+}
+
+delta.effs=data.frame(
+rbind( 
+  t(drawdeltas(c(2,4),11)), #female ac/uc
+  t(drawdeltas(c(2,4),16)) #black ac/us
+)
+)
+
+delta.effs = delta.effs %>%
+  mutate(var=ifelse(var==11,'Female','Black'),
+         model=ifelse(model==2,'Any Mention COD','Underlying COD'))
+
+#differences with pvalues!
+dodge=position_dodge(width=0.9)
+ggplot(delta.effs,aes(x=var,y=mean,fill=model)) +
+  geom_bar(stat='identity',position=dodge) +
+  geom_errorbar(aes(ymin=X2.5.,ymax=X97.5.),width=0.5,position=dodge)+
+  scale_fill_grey(start=.9,end=.5)+
+  guides(fill=guide_legend(title=element_blank()))+
+  theme_bw()
+
+
+#plot change
+###effects
+draweffs = function(modnums,varnum,icd10){
+  effs = rbind(
+    sapply(modnums,FUN=function(m)
+      c(
+        eff(exp(model[[m]]$gamma[,icd10,varnum])),
+        'model'=m,'var'=varnum,'icd10'=icd10)
+    )
+  )
   
-library(dplyr)
+  return(effs)
   
+}
+
+dem.effs=data.frame(
+  rbind( 
+    t(draweffs(c(2,4),11,1)), #female ac/uc
+    t(draweffs(c(2,4),11,2)),
+    t(draweffs(c(2,4),16,1)),#black ac/us
+    t(draweffs(c(2,4),16,2))
+  )
+)
+
+dem.effs = dem.effs %>%
+  mutate(var=ifelse(var==11,'Female','Black'),
+         model=ifelse(model==2,'Any Mention COD','Underlying COD'))
+
+#edit pvalues and locations from delta.effs
+meandiff=dem.effs %>% 
+  group_by(model,var) %>% 
+  summarize(mean=mean(mean)) %>% 
+  ungroup() %>% arrange(model,var)
+labs=delta.effs %>% arrange(model,var)
+labs$sig=sapply(delta.effs$pval,sig)
+  labs$sig=gsub('[ |\\+]','',labs$sig)
+labs$x=1.5
+labs$mean=meandiff$mean+.01
+  
+ggplot(dem.effs,aes(x=icd10,y=mean,color=var,shape=var)) +
+  geom_hline(aes(1),color='gray') + 
+  geom_point() + geom_line() +
+  geom_text(data=labs,
+            aes(x=x,y=mean,label=sig,color=NULL,shape=NULL),
+            show_guide=FALSE) +
+  facet_grid(.~model) +
+  geom_errorbar(aes(ymin=X2.5.,ymax=X97.5.),width=0.1)+
+  guides(color=guide_legend(title=element_blank()),
+         shape=guide_legend(title=element_blank())) +
+  scale_color_grey(start=0,end=.45) +
+  theme_bw()  +
+  scale_y_continuous(trans='log',breaks=seq(0.7,1.3,by=.1)) +
+  ylab('Multiplicitive Effect') +
+  scale_x_continuous(breaks=c(1,2),labels=c('ICD-9','ICD-10')) +
+  theme(panel.grid = element_blank(),
+        legend.position='bottom',
+        axis.title.x=element_blank())
+
+ggsave(paste0(imdir,'simplified-dem-beta.pdf'))
+###end plot change effects!
+
+  
+
 #omnibus -- calculate PROPORITON CHANGE BETWEEN ICD9 AND ICD 10 AS % DECLINE
   
 wt.ac = ppd[['ac']] %>% 
@@ -426,7 +545,7 @@ library(reshape2)
 ggplot(melt(all.scaled)) + geom_density(aes(x=value,fill=variable),alpha=.35)
 
 #THIS ONE                      
-colnames(all.delta) = c("All Cause","Underlying Cause")
+colnames(all.delta) = c("Any Mention","Underlying Cause")
 
 pdf(paste0(imdir,'delta_density.pdf'))
 
