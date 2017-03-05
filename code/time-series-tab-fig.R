@@ -205,9 +205,6 @@ cat('\n\nTable __. Bayesian regression estimates on logged Relative Rate
     of Acute to Chronic underlying-cause deaths 1994-2003.\n\n')
 
 
-#need to check with scott on the "pvalue" test, and read is simulation articles...
-#need to integrate uncertainty in measure out of this, probably to get a a \tilde(y)
-
 cat('|      |  Model 3 | Model 4-ICD9 | Model 4-ICD10 | M4: ICD10-ICD9 |\n')
 cat('|:-----|---------:|-------------:|--------------:|--------------------------------:|\n')
 
@@ -240,8 +237,8 @@ cat(printeff(model[[4]]$zi[,2]), '|')
 cat(delta(model[[4]]$zi,p=TRUE),'|\n')
 
 cat('| Level 2 Cell Var ($\\delta^2$) |')
-cat(printeff(model[[1]]$delta),'|')
-cat(printeff(model[[2]]$delta), '|')
+cat(printeff(model[[3]]$delta),'|')
+cat(printeff(model[[4]]$delta), '|')
 cat(' |')
 cat(' |\n')
 
@@ -347,7 +344,7 @@ for(r in 1:nrow(slices)){
 }#end dem (r) loop
 
 #print(deltas)
-deltas$dv = factor(deltas$dv,labels=c('Any Mention','Underlying Cause'))
+deltas$dv = factor(deltas$dv,labels=c('All Cause','Underlying Cause'))
 deltas$Black = factor(deltas$Black,labels=c('White','Black'))
 deltas$Female = factor(deltas$Female,labels=c('Male','Female'))
 
@@ -405,7 +402,7 @@ rbind(
 
 delta.effs = delta.effs %>%
   mutate(var=ifelse(var==11,'Female','Black'),
-         model=ifelse(model==2,'Any Mention COD','Underlying COD'))
+         model=ifelse(model==2,'All Cause','Underlying Cause'))
 
 #differences with pvalues!
 dodge=position_dodge(width=0.9)
@@ -443,23 +440,23 @@ dem.effs=data.frame(
 
 dem.effs = dem.effs %>%
   mutate(var=ifelse(var==11,'Female','Black'),
-         model=ifelse(model==2,'Any Mention COD','Underlying COD'))
+         model=ifelse(model==2,'All Cause','Underlying Cause'))
 
 #edit pvalues and locations from delta.effs
 meandiff=dem.effs %>% 
   group_by(model,var) %>% 
   summarize(mean=mean(mean)) %>% 
   ungroup() %>% arrange(model,var)
-labs=delta.effs %>% arrange(model,var)
-labs$sig=sapply(delta.effs$pval,sig)
-  labs$sig=gsub('[ |\\+]','',labs$sig)
-labs$x=1.5
-labs$mean=meandiff$mean+.01
+labls=delta.effs %>% arrange(model,var)
+labls$sig=sapply(delta.effs$pval,sig)
+  labls$sig=gsub('[ |\\+]','',labls$sig)
+labls$x=1.5
+labls$mean=meandiff$mean+.01
   
 ggplot(dem.effs,aes(x=icd10,y=mean,color=var,shape=var)) +
   geom_hline(aes(1),color='gray') + 
   geom_point() + geom_line() +
-  geom_text(data=labs,
+  geom_text(data=labls,
             aes(x=x,y=mean,label=sig,color=NULL,shape=NULL),
             show_guide=FALSE) +
   facet_grid(.~model) +
@@ -545,7 +542,7 @@ library(reshape2)
 ggplot(melt(all.scaled)) + geom_density(aes(x=value,fill=variable),alpha=.35)
 
 #THIS ONE                      
-colnames(all.delta) = c("Any Mention","Underlying Cause")
+colnames(all.delta) = c("All Cause","Underlying Cause")
 
 pdf(paste0(imdir,'delta_density.pdf'))
 
