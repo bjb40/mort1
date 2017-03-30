@@ -79,15 +79,36 @@ race.describe = describe %>%
   filter(race %in% c('black','white')) %>%
   group_by(female,race,complex,pd) %>% 
   summarize_each(funs(sum),tot) %>%
-  group_by(female,race) %>% mutate(tot=rnd(tot/sum(tot)))
+  group_by(female,race) %>% mutate(tot=tot/sum(tot))
+
+#confirm proportion sums...
+race.describe %>% 
+  group_by(female,race) %>% 
+  summarize(sum(tot))
 
 race.describe$race = factor(race.describe$race,labels=c('White','Black'))
 race.describe$female = factor(race.describe$female,labels=c('Female','Male'))
-race.describe$complex = factor(race.describe$complex,labels=c('Not Complex','Complex'))
+race.describe$complex = factor(race.describe$complex,labels=c('1 or 2 causes','More than 2'))
 
-ggplot(race.describe, aes(y=tot,x=complex,fill=pd)) +
-  geom_bar(stat='identity',position='stack') + 
-  facet_grid(.~race+female) 
+library(gridExtra)
+
+p=ggplot(race.describe, aes(y=tot,x=complex,fill=pd)) +
+  geom_bar(stat='identity',position='stack') +
+  facet_grid(.~race+female) + 
+  theme(axis.text.x=element_text(angle=90,hjust=0,vjust=0.5)) +
+  ylab('Proportion') +
+  scale_fill_discrete(guide=guide_legend(title='Place of Death'),l=50) +
+  ggtitle('Place of Death:\nRace, Gender, and Comorbidities') +
+  theme(axis.title.x=element_blank())
+
+jpeg(paste0(imdir,'place_of_death.jpg'),
+     height=1554,width=1488,units='px',res=170)
+grid.arrange(p,bottom=textGrob('Source: National Center for Health Statistics “Public Use Multiple Cause of Death Mortality File" (1994-2003).
+Calculated: Bryce Bartlett (http://www.brycebartlett.com).',
+just='left',x=0,y=0.5,gp=gpar(fontsize=8)))
+  
+dev.off()
+
 
 #average age:
 ages = raw %>% group_by(ager,ICD10) %>%
